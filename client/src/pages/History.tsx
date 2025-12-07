@@ -11,9 +11,28 @@ export default function History() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
 
-  const { data: history, isLoading } = trpc.correction.getHistory.useQuery(undefined, {
+  const { data: corrections, isLoading: correctionsLoading } = trpc.correction.getHistory.useQuery(undefined, {
     enabled: !!user,
   });
+
+  const { data: dictations, isLoading: dictationsLoading } = trpc.dictation.getSessions.useQuery(undefined, {
+    enabled: !!user,
+  });
+
+  const isLoading = correctionsLoading || dictationsLoading;
+
+  // Combiner les dictées et corrections dans l'historique
+  const history = [
+    ...(dictations || []).map((d: any) => ({
+      ...d,
+      type: 'dictation' as const,
+      words: JSON.parse(d.words),
+    })),
+    ...(corrections || []).map((c: any) => ({
+      ...c,
+      type: 'correction' as const,
+    })),
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "bg-green-100 text-green-800";
@@ -32,16 +51,30 @@ export default function History() {
   const calculateStats = () => {
     if (!history || history.length === 0) return null;
 
-    const totalCorrections = history.length;
+    const correctionsOnly = history.filter((h: any) => h.type === 'correction');
+    const totalCorrections = correctionsOnly.length;
+    const totalDictations = history.filter((h: any) => h.type === 'dictation').length;
+    
+    if (totalCorrections === 0) {
+      return {
+        totalCorrections: 0,
+        totalDictations,
+        averageScore: 0,
+        bestScore: 0,
+        latestScore: 0,
+        trend: "stable",
+      };
+    }
+
     const averageScore = Math.round(
-      history.reduce((sum: number, h: any) => sum + h.score, 0) / totalCorrections
+      correctionsOnly.reduce((sum: number, h: any) => sum + h.score, 0) / totalCorrections
     );
-    const bestScore = Math.max(...history.map((h: any) => h.score));
-    const latestScore = history[0]?.score || 0;
+    const bestScore = Math.max(...correctionsOnly.map((h: any) => h.score));
+    const latestScore = correctionsOnly[0]?.score || 0;
     
     // Calculer la tendance (dernières 5 vs précédentes)
-    const recent = history.slice(0, Math.min(5, history.length));
-    const older = history.slice(5, Math.min(10, history.length));
+    const recent = correctionsOnly.slice(0, Math.min(5, correctionsOnly.length));
+    const older = correctionsOnly.slice(5, Math.min(10, correctionsOnly.length));
     
     let trend = "stable";
     if (older.length > 0) {
@@ -184,27 +217,39 @@ export default function History() {
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle>Historique des corrections</CardTitle>
+                <CardTitle>Historique complet</CardTitle>
                 <CardDescription>
-                  Toutes vos dictées corrigées par ordre chronologique
+                  Toutes vos dictées et corrections par ordre chronologique
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {history.map((correction: any) => (
+                  {history.map((item: any) => (
                     <div
-                      key={correction.id}
+                      key={`${item.type}-${item.id}`}
                       className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => setLocation(`/correction/${correction.id}`)}
+                      onClick={() => {
+                        if (item.type === 'correction') {
+                          setLocation(`/correction/${item.id}`);
+                        } else {
+                          setLocation('/dictation');
+                        }
+                      }}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge className={getScoreColor(correction.score)}>
-                              {correction.score}/100 - {getScoreGrade(correction.score)}
-                            </Badge>
+                            {item.type === 'correction' ? (
+                              <Badge className={getScoreColor(item.score)}>
+                                {item.score}/100 - {getScoreGrade(item.score)}
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-blue-100 text-blue-800">
+                                Dictée créée
+                              </Badge>
+                            )}
                             <span className="text-xs text-gray-500">
-                              {new Date(correction.createdAt).toLocaleDateString("fr-FR", {
+                              {new Date(item.createdAt).toLocaleDateString("fr-FR", {
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
@@ -214,19 +259,36 @@ export default function History() {
                             </span>
                           </div>
                           <p className="text-sm text-gray-700 line-clamp-2">
-                            {correction.originalText}
+                            {item.type === 'correction' ? item.originalText : `${item.words.length} mots extraits`}
                           </p>
                         </div>
-                        <div className="text-right ml-4">
-                          <p className="text-2xl font-bold text-gray-900">{correction.score}</p>
-                          <p className="text-xs text-gray-500">
-                            {correction.correctWords}/{correction.totalWords} mots
-                          </p>
-                        </div>
+                        {item.type === 'correction' && (
+                          <div className="text-right ml-4">
+                            <p className="text-2xl font-bold text-gray-900">{item.score}</p>
+                            <p className="text-xs text-gray-500">
+                              {item.correctWords}/{item.totalWords} mots
+                            </p>
+                          </div>
+                        )}
+                        {item.type === 'dictation' && (
+                          <div className="text-right ml-4">
+                            <p className="text-2xl font-bold text-gray-900">{item.words.length}</p>
+                            <p className="text-xs text-gray-500">mots</p>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{correction.errors.length} erreur(s) détectée(s)</span>
-                        <span className="text-blue-600 hover:underline">Voir les détails →</span>
+                        {item.type === 'correction' ? (
+                          <>
+                            <span>{item.errors.length} erreur(s) détectée(s)</span>
+                            <span className="text-blue-600 hover:underline">Voir les détails →</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Dictée prête à être utilisée</span>
+                            <span className="text-blue-600 hover:underline">Ouvrir →</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}

@@ -31,3 +31,13 @@
 - [x] Créer la page d'historique avec graphiques d'évolution
 - [x] Tester toutes les fonctionnalités de correction
 - [x] Créer le checkpoint final
+
+## Corrections importantes
+
+- [x] Améliorer l'extraction de mots pour identifier les mots complets (ex: "l'antilope" au lieu de "l'" et "antilope")
+- [x] Ajouter les dictées créées à l'historique automatiquement
+- [x] Corriger la génération de dictée pour afficher le texte généré
+- [x] Ajouter la lecture vocale du texte de dictée généré
+- [x] Ajouter le bouton d'upload de photo pour correction dans le contexte de la dictée
+- [x] Tester toutes les corrections
+- [x] Créer le checkpoint final

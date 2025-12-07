@@ -26,7 +26,7 @@ export async function extractWordsFromImage(
           {
             parts: [
               {
-                text: "Extrais tous les mots de cette image. Retourne uniquement les mots séparés par des virgules, sans numérotation ni formatage supplémentaire. Si l'image contient une liste de mots pour une dictée, extrais chaque mot individuellement.",
+                text: "Analyse cette image et extrais TOUS les mots pour une dictée. IMPORTANT : \n- Identifie les mots COMPLETS avec leurs articles et apostrophes (ex: 'l’antilope' est UN seul mot, pas 'l\'' et 'antilope' séparés)\n- Garde les mots composés ensemble (ex: 'aujourd’hui', 'c’est-à-dire')\n- Préserve les accents et la ponctuation interne aux mots\n- Retourne uniquement les mots séparés par des virgules, sans numérotation\n- Utilise ton raisonnement pour déterminer ce qui constitue un mot complet dans le contexte d'une dictée française.",
               },
               {
                 inline_data: {

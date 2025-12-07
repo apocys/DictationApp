@@ -22,6 +22,8 @@ export default function Dictation() {
   const [intervalSeconds, setIntervalSeconds] = useState(5);
   const [generatedDictation, setGeneratedDictation] = useState<string>("");
   const [isReadingDictation, setIsReadingDictation] = useState(false);
+  const [correctionImageFile, setCorrectionImageFile] = useState<File | null>(null);
+  const [correctionImagePreview, setCorrectionImagePreview] = useState<string>("");
 
   const { data: apiKeyData } = trpc.apiKeys.get.useQuery(undefined, {
     enabled: !!user,
@@ -50,6 +52,16 @@ export default function Dictation() {
     onSuccess: (data) => {
       setGeneratedDictation(data.dictationText);
       toast.success("Dictée générée avec succès");
+    },
+    onError: (error) => {
+      toast.error(`Erreur: ${error.message}`);
+    },
+  });
+
+  const analyzeCorrectionMutation = trpc.correction.analyze.useMutation({
+    onSuccess: (data) => {
+      toast.success("Correction terminée !");
+      setLocation("/history");
     },
     onError: (error) => {
       toast.error(`Erreur: ${error.message}`);
@@ -157,6 +169,54 @@ export default function Dictation() {
   const stopDictation = () => {
     setIsReadingDictation(false);
     window.speechSynthesis.cancel();
+  };
+
+  const handleCorrectionImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCorrectionImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCorrectionImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadCorrection = async () => {
+    if (!correctionImageFile) {
+      toast.error("Veuillez sélectionner une image de votre dictée");
+      return;
+    }
+
+    if (!generatedDictation) {
+      toast.error("Veuillez d'abord générer une dictée");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", correctionImageFile);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de l'upload");
+      }
+
+      const { url } = await response.json();
+      
+      analyzeCorrectionMutation.mutate({
+        originalText: generatedDictation,
+        userImageUrl: url,
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Erreur lors de l'upload de l'image");
+    }
   };
 
   const jumpToWord = (index: number) => {
@@ -350,15 +410,44 @@ export default function Dictation() {
                           </Button>
                         )}
                       </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setLocation("/correction");
-                        }}
-                        className="w-full mt-2"
-                      >
-                        Corriger ma dictée →
-                      </Button>
+                      <div className="mt-4 p-4 border-2 border-dashed rounded-lg">
+                        <h4 className="font-medium mb-2">Uploadez votre dictée rédigée</h4>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Prenez une photo de votre dictée et uploadez-la pour obtenir une correction détaillée
+                        </p>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCorrectionImageChange}
+                          className="mb-2"
+                        />
+                        {correctionImagePreview && (
+                          <div className="mb-2 border rounded p-2">
+                            <img
+                              src={correctionImagePreview}
+                              alt="Prévisualisation"
+                              className="max-w-full h-auto rounded"
+                            />
+                          </div>
+                        )}
+                        <Button
+                          onClick={handleUploadCorrection}
+                          disabled={analyzeCorrectionMutation.isPending || !correctionImageFile}
+                          className="w-full"
+                        >
+                          {analyzeCorrectionMutation.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Analyse en cours...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="mr-2 h-4 w-4" />
+                              Corriger ma dictée
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </>
                   )}
                 </CardContent>

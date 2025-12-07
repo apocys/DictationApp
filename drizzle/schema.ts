@@ -32,6 +32,7 @@ export const apiKeys = mysqlTable("apiKeys", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull().unique(),
   geminiApiKey: text("geminiApiKey").notNull(),
+  wordInterval: int("wordInterval").default(5).notNull(), // Intervalle en secondes entre les mots
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -37,7 +37,7 @@ describe("apiKeys router", () => {
     const caller = appRouter.createCaller(ctx);
 
     // Save API key
-    const saveResult = await caller.apiKeys.save({
+    const saveResult = await caller.apiKeys.saveApiKey({
       geminiApiKey: "test-api-key-12345",
     });
 
@@ -56,12 +56,12 @@ describe("apiKeys router", () => {
     const caller = appRouter.createCaller(ctx);
 
     // Save initial API key
-    await caller.apiKeys.save({
+    await caller.apiKeys.saveApiKey({
       geminiApiKey: "initial-key",
     });
 
     // Update API key
-    await caller.apiKeys.save({
+    await caller.apiKeys.saveApiKey({
       geminiApiKey: "updated-key",
     });
 

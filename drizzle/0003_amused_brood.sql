@@ -1,0 +1,1 @@
+ALTER TABLE `apiKeys` ADD `wordInterval` int DEFAULT 5 NOT NULL;

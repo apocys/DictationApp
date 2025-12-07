@@ -20,7 +20,7 @@ export async function extractWordsFromImage(
 
     // Appeler l'API Gemini
     const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         contents: [
           {
@@ -62,6 +62,58 @@ export async function extractWordsFromImage(
     return words;
   } catch (error) {
     console.error("Error extracting words from image:", error);
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `Gemini API error: ${error.response?.data?.error?.message || error.message}`
+      );
+    }
+    throw error;
+  }
+}
+
+/**
+ * Génère une dictée complète basée sur une liste de mots
+ * @param words Liste des mots à utiliser
+ * @param apiKey Clé API Gemini
+ * @returns Texte de la dictée générée
+ */
+export async function generateDictation(
+  words: string[],
+  apiKey: string
+): Promise<string> {
+  try {
+    const wordList = words.join(", ");
+    
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: `Écris une dictée en français d'environ 100-150 mots qui utilise TOUS les mots suivants de manière naturelle et cohérente : ${wordList}. La dictée doit être un texte continu et fluide, pas une liste de phrases séparées. Assure-toi que tous les mots de la liste sont utilisés au moins une fois.`,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024,
+        },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const text =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    return text.trim();
+  } catch (error) {
+    console.error("Error generating dictation:", error);
     if (axios.isAxiosError(error)) {
       throw new Error(
         `Gemini API error: ${error.response?.data?.error?.message || error.message}`

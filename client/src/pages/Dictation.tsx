@@ -20,6 +20,18 @@ export default function Dictation() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [intervalSeconds, setIntervalSeconds] = useState(5);
+  const [generatedDictation, setGeneratedDictation] = useState<string>("");
+  const [isReadingDictation, setIsReadingDictation] = useState(false);
+
+  const { data: apiKeyData } = trpc.apiKeys.get.useQuery(undefined, {
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    if (apiKeyData?.wordInterval) {
+      setIntervalSeconds(apiKeyData.wordInterval);
+    }
+  }, [apiKeyData]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -28,6 +40,16 @@ export default function Dictation() {
       setWords(data.words);
       setCurrentWordIndex(0);
       toast.success(`${data.words.length} mots extraits avec succès`);
+    },
+    onError: (error) => {
+      toast.error(`Erreur: ${error.message}`);
+    },
+  });
+
+  const generateDictationMutation = trpc.dictation.generateDictation.useMutation({
+    onSuccess: (data) => {
+      setGeneratedDictation(data.dictationText);
+      toast.success("Dictée générée avec succès");
     },
     onError: (error) => {
       toast.error(`Erreur: ${error.message}`);
@@ -103,6 +125,37 @@ export default function Dictation() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    window.speechSynthesis.cancel();
+  };
+
+  const handleGenerateDictation = () => {
+    if (words.length === 0) {
+      toast.error("Veuillez d'abord extraire des mots d'une image");
+      return;
+    }
+    generateDictationMutation.mutate({ words });
+  };
+
+  const speakDictation = () => {
+    if (!generatedDictation) {
+      toast.error("Veuillez d'abord générer une dictée");
+      return;
+    }
+    if ('speechSynthesis' in window) {
+      setIsReadingDictation(true);
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(generatedDictation);
+      utterance.lang = 'fr-FR';
+      utterance.rate = 0.8;
+      utterance.onend = () => {
+        setIsReadingDictation(false);
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const stopDictation = () => {
+    setIsReadingDictation(false);
     window.speechSynthesis.cancel();
   };
 
@@ -257,7 +310,54 @@ export default function Dictation() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>3. Mots extraits ({words.length})</CardTitle>
+                  <CardTitle>3. Générer une dictée</CardTitle>
+                  <CardDescription>
+                    Créez une dictée complète utilisant tous les mots extraits
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    onClick={handleGenerateDictation}
+                    disabled={generateDictationMutation.isPending}
+                    className="w-full"
+                  >
+                    {generateDictationMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Génération...
+                      </>
+                    ) : (
+                      "Générer une dictée"
+                    )}
+                  </Button>
+                  {generatedDictation && (
+                    <>
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {generatedDictation}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {!isReadingDictation ? (
+                          <Button onClick={speakDictation} className="flex-1">
+                            <Play className="mr-2 h-4 w-4" />
+                            Lire la dictée
+                          </Button>
+                        ) : (
+                          <Button onClick={stopDictation} variant="secondary" className="flex-1">
+                            <Pause className="mr-2 h-4 w-4" />
+                            Arrêter
+                          </Button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>4. Mots extraits ({words.length})</CardTitle>
                   <CardDescription>
                     Cliquez sur un mot pour reprendre la lecture à partir de celui-ci
                   </CardDescription>

@@ -9,4 +9,13 @@
 - [x] Implémenter la lecture audio avec intervalle configurable
 - [x] Implémenter la fonctionnalité de reprise de lecture à partir d'un mot spécifique
 - [x] Tester l'application complète
-- [ ] Créer le checkpoint final
+- [x] Créer le checkpoint final
+
+## Nouvelles améliorations demandées
+
+- [x] Corriger le modèle Gemini pour utiliser 2.5 Flash au lieu de 2.0 Flash Exp
+- [x] Rendre l'intervalle entre les mots configurable dans les paramètres
+- [x] Ajouter un bouton pour générer une dictée complète basée sur les mots extraits
+- [x] Permettre la lecture audio de la dictée générée
+- [x] Tester toutes les nouvelles fonctionnalités
+- [x] Créer le checkpoint final avec les améliorations

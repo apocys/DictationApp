@@ -14,6 +14,7 @@ export default function Settings() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [apiKey, setApiKey] = useState("");
+  const [wordInterval, setWordInterval] = useState(5);
 
   const { data: existingApiKey, isLoading: loadingApiKey } = trpc.apiKeys.get.useQuery(
     undefined,
@@ -22,7 +23,7 @@ export default function Settings() {
     }
   );
 
-  const saveApiKeyMutation = trpc.apiKeys.save.useMutation({
+  const saveApiKeyMutation = trpc.apiKeys.saveApiKey.useMutation({
     onSuccess: () => {
       toast.success("Clé API sauvegardée avec succès");
     },
@@ -35,6 +36,9 @@ export default function Settings() {
     if (existingApiKey?.geminiApiKey) {
       setApiKey(existingApiKey.geminiApiKey);
     }
+    if (existingApiKey?.wordInterval) {
+      setWordInterval(existingApiKey.wordInterval);
+    }
   }, [existingApiKey]);
 
   const handleSave = () => {
@@ -42,7 +46,7 @@ export default function Settings() {
       toast.error("Veuillez entrer une clé API");
       return;
     }
-    saveApiKeyMutation.mutate({ geminiApiKey: apiKey });
+    saveApiKeyMutation.mutate({ geminiApiKey: apiKey, wordInterval });
   };
 
   if (authLoading || loadingApiKey) {
@@ -102,6 +106,20 @@ export default function Settings() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="wordInterval">Intervalle entre les mots (secondes)</Label>
+              <Input
+                id="wordInterval"
+                type="number"
+                min="1"
+                max="60"
+                value={wordInterval}
+                onChange={(e) => setWordInterval(Number(e.target.value))}
+              />
+              <p className="text-sm text-gray-500">
+                Délai entre chaque mot lors de la lecture (1-60 secondes)
+              </p>
             </div>
             <Button
               onClick={handleSave}

@@ -102,7 +102,7 @@ export async function getApiKeyByUserId(userId: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function upsertApiKey(userId: number, geminiApiKey: string) {
+export async function upsertApiKey(userId: number, geminiApiKey: string, wordInterval?: number) {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot upsert API key: database not available");
@@ -110,14 +110,26 @@ export async function upsertApiKey(userId: number, geminiApiKey: string) {
   }
 
   const { apiKeys } = await import("../drizzle/schema");
-  await db.insert(apiKeys).values({
+  const values: any = {
     userId,
     geminiApiKey,
-  }).onDuplicateKeyUpdate({
-    set: {
-      geminiApiKey,
-      updatedAt: new Date(),
-    },
+  };
+  
+  if (wordInterval !== undefined) {
+    values.wordInterval = wordInterval;
+  }
+  
+  const updateSet: any = {
+    geminiApiKey,
+    updatedAt: new Date(),
+  };
+  
+  if (wordInterval !== undefined) {
+    updateSet.wordInterval = wordInterval;
+  }
+  
+  await db.insert(apiKeys).values(values).onDuplicateKeyUpdate({
+    set: updateSet,
   });
 }
 

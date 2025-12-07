@@ -24,15 +24,16 @@ export const appRouter = router({
       const { getApiKeyByUserId } = await import("./db");
       return getApiKeyByUserId(ctx.user.id);
     }),
-    save: protectedProcedure
+    saveApiKey: protectedProcedure
       .input(
         z.object({
-          geminiApiKey: z.string().min(1, "La clé API est requise"),
+          geminiApiKey: z.string().min(1, "Clé API requise"),
+          wordInterval: z.number().min(1).max(60).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         const { upsertApiKey } = await import("./db");
-        await upsertApiKey(ctx.user.id, input.geminiApiKey);
+        await upsertApiKey(ctx.user.id, input.geminiApiKey, input.wordInterval);
         return { success: true };
       }),
   }),
@@ -72,6 +73,32 @@ export const appRouter = router({
       const { getDictationSessionsByUserId } = await import("./db");
       return getDictationSessionsByUserId(ctx.user.id);
     }),
+    generateDictation: protectedProcedure
+      .input(
+        z.object({
+          words: z.array(z.string()).min(1, "Au moins un mot requis"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { getApiKeyByUserId } = await import("./db");
+        const { generateDictation } = await import("./gemini");
+
+        // Récupérer la clé API de l'utilisateur
+        const apiKeyRecord = await getApiKeyByUserId(ctx.user.id);
+        if (!apiKeyRecord) {
+          throw new Error(
+            "Aucune clé API Gemini configurée. Veuillez configurer votre clé API dans les paramètres."
+          );
+        }
+
+        // Générer la dictée
+        const dictationText = await generateDictation(
+          input.words,
+          apiKeyRecord.geminiApiKey
+        );
+
+        return { dictationText };
+      }),
   }),
 });
 

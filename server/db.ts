@@ -89,4 +89,66 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// API Keys management
+export async function getApiKeyByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get API key: database not available");
+    return undefined;
+  }
+
+  const { apiKeys } = await import("../drizzle/schema");
+  const result = await db.select().from(apiKeys).where(eq(apiKeys.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function upsertApiKey(userId: number, geminiApiKey: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot upsert API key: database not available");
+    return;
+  }
+
+  const { apiKeys } = await import("../drizzle/schema");
+  await db.insert(apiKeys).values({
+    userId,
+    geminiApiKey,
+  }).onDuplicateKeyUpdate({
+    set: {
+      geminiApiKey,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+// Dictation sessions management
+export async function createDictationSession(userId: number, imageUrl: string, words: string[]) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create dictation session: database not available");
+    return;
+  }
+
+  const { dictationSessions } = await import("../drizzle/schema");
+  const result = await db.insert(dictationSessions).values({
+    userId,
+    imageUrl,
+    words: JSON.stringify(words),
+  });
+  return result;
+}
+
+export async function getDictationSessionsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get dictation sessions: database not available");
+    return [];
+  }
+
+  const { dictationSessions } = await import("../drizzle/schema");
+  const result = await db.select().from(dictationSessions).where(eq(dictationSessions.userId, userId));
+  return result.map(session => ({
+    ...session,
+    words: JSON.parse(session.words) as string[],
+  }));
+}

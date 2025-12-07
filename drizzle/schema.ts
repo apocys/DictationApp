@@ -25,4 +25,30 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Table pour stocker la clé API Gemini de l'utilisateur propriétaire
+ */
+export const apiKeys = mysqlTable("apiKeys", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  geminiApiKey: text("geminiApiKey").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertApiKey = typeof apiKeys.$inferInsert;
+
+/**
+ * Table pour stocker les sessions de dictée avec les mots extraits
+ */
+export const dictationSessions = mysqlTable("dictationSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  words: text("words").notNull(), // JSON array of words
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DictationSession = typeof dictationSessions.$inferSelect;
+export type InsertDictationSession = typeof dictationSessions.$inferInsert;

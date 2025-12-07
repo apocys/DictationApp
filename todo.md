@@ -19,3 +19,15 @@
 - [x] Permettre la lecture audio de la dictée générée
 - [x] Tester toutes les nouvelles fonctionnalités
 - [x] Créer le checkpoint final avec les améliorations
+
+## Fonctionnalité de correction de dictée
+
+- [x] Créer le schéma de base de données pour stocker les corrections et les scores
+- [x] Développer l'endpoint backend pour uploader et analyser la photo de dictée
+- [x] Développer l'endpoint backend pour comparer le texte écrit avec le texte original
+- [x] Créer l'interface utilisateur pour uploader la photo de dictée rédigée
+- [x] Créer l'interface d'affichage des erreurs détaillées avec explications
+- [x] Implémenter le système de notation (score sur 100)
+- [x] Créer la page d'historique avec graphiques d'évolution
+- [x] Tester toutes les fonctionnalités de correction
+- [x] Créer le checkpoint final

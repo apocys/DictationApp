@@ -100,6 +100,72 @@ export const appRouter = router({
         return { dictationText };
       }),
   }),
+
+  // Correction management
+  correction: router({
+    analyze: protectedProcedure
+      .input(
+        z.object({
+          originalText: z.string().min(1, "Texte original requis"),
+          userImageUrl: z.string().url("URL d'image invalide"),
+          sessionId: z.number().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { getApiKeyByUserId, createDictationCorrection } = await import("./db");
+        const { extractWordsFromImage, analyzeDictationErrors } = await import("./gemini");
+
+        // Récupérer la clé API de l'utilisateur
+        const apiKeyRecord = await getApiKeyByUserId(ctx.user.id);
+        if (!apiKeyRecord) {
+          throw new Error(
+            "Aucune clé API Gemini configurée. Veuillez configurer votre clé API dans les paramètres."
+          );
+        }
+
+        // Extraire le texte de l'image de l'utilisateur
+        const extractedWords = await extractWordsFromImage(
+          input.userImageUrl,
+          apiKeyRecord.geminiApiKey
+        );
+        const extractedUserText = extractedWords.join(" ");
+
+        // Analyser les erreurs
+        const analysis = await analyzeDictationErrors(
+          input.originalText,
+          extractedUserText,
+          apiKeyRecord.geminiApiKey
+        );
+
+        // Sauvegarder la correction
+        await createDictationCorrection({
+          userId: ctx.user.id,
+          sessionId: input.sessionId,
+          originalText: input.originalText,
+          userImageUrl: input.userImageUrl,
+          extractedUserText,
+          errors: analysis.errors,
+          score: analysis.score,
+          totalWords: analysis.totalWords,
+          correctWords: analysis.correctWords,
+        });
+
+        return {
+          extractedUserText,
+          ...analysis,
+        };
+      }),
+    getHistory: protectedProcedure.query(async ({ ctx }) => {
+      const { getDictationCorrectionsByUserId } = await import("./db");
+      return getDictationCorrectionsByUserId(ctx.user.id);
+    }),
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const { getDictationCorrectionById } = await import("./db");
+        return getDictationCorrectionById(input.id, ctx.user.id);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

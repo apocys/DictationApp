@@ -164,3 +164,88 @@ export async function getDictationSessionsByUserId(userId: number) {
     words: JSON.parse(session.words) as string[],
   }));
 }
+
+// Dictation corrections management
+export async function createDictationCorrection(data: {
+  userId: number;
+  sessionId?: number;
+  originalText: string;
+  userImageUrl: string;
+  extractedUserText: string;
+  errors: any[];
+  score: number;
+  totalWords: number;
+  correctWords: number;
+}) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create dictation correction: database not available");
+    return;
+  }
+
+  const { dictationCorrections } = await import("../drizzle/schema");
+  const result = await db.insert(dictationCorrections).values({
+    userId: data.userId,
+    sessionId: data.sessionId,
+    originalText: data.originalText,
+    userImageUrl: data.userImageUrl,
+    extractedUserText: data.extractedUserText,
+    errors: JSON.stringify(data.errors),
+    score: data.score,
+    totalWords: data.totalWords,
+    correctWords: data.correctWords,
+  });
+  
+  return result;
+}
+
+export async function getDictationCorrectionsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get dictation corrections: database not available");
+    return [];
+  }
+
+  const { dictationCorrections } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  
+  const results = await db
+    .select()
+    .from(dictationCorrections)
+    .where(eq(dictationCorrections.userId, userId))
+    .orderBy(desc(dictationCorrections.createdAt));
+  
+  return results.map(r => ({
+    ...r,
+    errors: JSON.parse(r.errors),
+  }));
+}
+
+export async function getDictationCorrectionById(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get dictation correction: database not available");
+    return undefined;
+  }
+
+  const { dictationCorrections } = await import("../drizzle/schema");
+  const { and } = await import("drizzle-orm");
+  
+  const results = await db
+    .select()
+    .from(dictationCorrections)
+    .where(
+      and(
+        eq(dictationCorrections.id, id),
+        eq(dictationCorrections.userId, userId)
+      )
+    )
+    .limit(1);
+  
+  if (results.length === 0) return undefined;
+  
+  return {
+    ...results[0],
+    errors: JSON.parse(results[0].errors),
+  };
+}

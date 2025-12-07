@@ -350,6 +350,15 @@ export default function Dictation() {
                           </Button>
                         )}
                       </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setLocation("/correction");
+                        }}
+                        className="w-full mt-2"
+                      >
+                        Corriger ma dictée →
+                      </Button>
                     </>
                   )}
                 </CardContent>

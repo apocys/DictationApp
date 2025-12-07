@@ -53,3 +53,22 @@ export const dictationSessions = mysqlTable("dictationSessions", {
 
 export type DictationSession = typeof dictationSessions.$inferSelect;
 export type InsertDictationSession = typeof dictationSessions.$inferInsert;
+/**
+ * Table pour stocker les corrections de dictée avec analyse détaillée
+ */
+export const dictationCorrections = mysqlTable("dictationCorrections", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  sessionId: int("sessionId"), // Lien vers la session de dictée originale (optionnel)
+  originalText: text("originalText").notNull(), // Texte de la dictée originale
+  userImageUrl: text("userImageUrl").notNull(), // Photo de la dictée rédigée par l'utilisateur
+  extractedUserText: text("extractedUserText").notNull(), // Texte extrait de la photo
+  errors: text("errors").notNull(), // JSON array des erreurs détectées
+  score: int("score").notNull(), // Score sur 100
+  totalWords: int("totalWords").notNull(),
+  correctWords: int("correctWords").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DictationCorrection = typeof dictationCorrections.$inferSelect;
+export type InsertDictationCorrection = typeof dictationCorrections.$inferInsert;

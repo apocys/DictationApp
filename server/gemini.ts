@@ -122,3 +122,110 @@ export async function generateDictation(
     throw error;
   }
 }
+
+/**
+ * Compare le texte original avec le texte écrit par l'utilisateur et identifie les erreurs
+ * @param originalText Texte de la dictée originale
+ * @param userText Texte écrit par l'utilisateur
+ * @param apiKey Clé API Gemini
+ * @returns Analyse détaillée des erreurs
+ */
+export async function analyzeDictationErrors(
+  originalText: string,
+  userText: string,
+  apiKey: string
+): Promise<{
+  errors: Array<{
+    type: string;
+    original: string;
+    user: string;
+    explanation: string;
+    position: number;
+  }>;
+  score: number;
+  totalWords: number;
+  correctWords: number;
+  feedback: string;
+}> {
+  try {
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: `Tu es un correcteur de dictée expert. Compare le texte original avec le texte écrit par l'utilisateur et identifie TOUTES les erreurs.
+
+TEXTE ORIGINAL:
+${originalText}
+
+TEXTE DE L'UTILISATEUR:
+${userText}
+
+Analyse les erreurs et retourne un JSON avec cette structure exacte:
+{
+  "errors": [
+    {
+      "type": "orthographe|grammaire|conjugaison|accord|ponctuation|autre",
+      "original": "mot ou phrase correcte",
+      "user": "ce que l'utilisateur a écrit",
+      "explanation": "explication pédagogique détaillée de l'erreur",
+      "position": numéro_du_mot_dans_le_texte
+    }
+  ],
+  "totalWords": nombre_total_de_mots,
+  "correctWords": nombre_de_mots_corrects,
+  "feedback": "commentaire général encourageant et constructif sur la performance"
+}
+
+Sois précis et pédagogique dans tes explications. Retourne UNIQUEMENT le JSON, sans texte avant ou après.`,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 4096,
+        },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const text =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    // Extraire le JSON de la réponse
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Format de réponse invalide");
+    }
+
+    const analysis = JSON.parse(jsonMatch[0]);
+    
+    // Calculer le score sur 100
+    const score = analysis.totalWords > 0 
+      ? Math.round((analysis.correctWords / analysis.totalWords) * 100)
+      : 0;
+
+    return {
+      errors: analysis.errors || [],
+      score,
+      totalWords: analysis.totalWords || 0,
+      correctWords: analysis.correctWords || 0,
+      feedback: analysis.feedback || "Continuez vos efforts !",
+    };
+  } catch (error) {
+    console.error("Error analyzing dictation errors:", error);
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `Gemini API error: ${error.response?.data?.error?.message || error.message}`
+      );
+    }
+    throw error;
+  }
+}

@@ -110,14 +110,32 @@ export default function Home() {
           <p className="text-lg text-gray-600 mb-8">
             Commencez votre dictée en uploadant une image contenant les mots à apprendre.
           </p>
-          <Button
-            size="lg"
-            onClick={() => setLocation("/dictation")}
-            className="text-lg px-8 py-6"
-          >
-            <BookOpen className="h-5 w-5 mr-2" />
-            Commencer une dictée
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              onClick={() => setLocation("/dictation")}
+              className="text-lg px-8 py-6"
+            >
+              <BookOpen className="h-5 w-5 mr-2" />
+              Commencer une dictée
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setLocation("/correction")}
+              className="text-lg px-8 py-6"
+            >
+              Corriger ma dictée
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setLocation("/history")}
+              className="text-lg px-8 py-6"
+            >
+              Historique
+            </Button>
+          </div>
         </div>
       </div>
     </div>

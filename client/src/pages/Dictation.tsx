@@ -50,8 +50,19 @@ export default function Dictation() {
 
   const generateDictationMutation = trpc.dictation.generateDictation.useMutation({
     onSuccess: (data) => {
-      setGeneratedDictation(data.dictationText);
-      toast.success("Dictée générée avec succès");
+      console.log('=== generateDictation onSuccess ===');
+      console.log('Full data object:', data);
+      console.log('data.dictationText:', data.dictationText);
+      console.log('Type of data:', typeof data);
+      console.log('Keys in data:', Object.keys(data));
+      
+      if (data && data.dictationText) {
+        setGeneratedDictation(data.dictationText);
+        toast.success("Dictée générée avec succès");
+      } else {
+        console.error('dictationText is missing or undefined!');
+        toast.error("Erreur: le texte de la dictée n'a pas été reçu");
+      }
     },
     onError: (error) => {
       toast.error(`Erreur: ${error.message}`);
@@ -390,6 +401,9 @@ export default function Dictation() {
                       "Générer une dictée"
                     )}
                   </Button>
+                  <div className="text-xs text-gray-500 mt-2">
+                    Debug: generatedDictation = {generatedDictation ? `"${generatedDictation.substring(0, 50)}..."` : "null/empty"}
+                  </div>
                   {generatedDictation && (
                     <>
                       <div className="border rounded-lg p-4 bg-gray-50">

@@ -26,7 +26,7 @@ export async function extractWordsFromImage(
           {
             parts: [
               {
-                text: "Analyse cette image et extrais TOUS les mots pour une dictée. IMPORTANT : \n- Identifie les mots COMPLETS avec leurs articles et apostrophes (ex: 'l’antilope' est UN seul mot, pas 'l\'' et 'antilope' séparés)\n- Garde les mots composés ensemble (ex: 'aujourd’hui', 'c’est-à-dire')\n- Préserve les accents et la ponctuation interne aux mots\n- Retourne uniquement les mots séparés par des virgules, sans numérotation\n- Utilise ton raisonnement pour déterminer ce qui constitue un mot complet dans le contexte d'une dictée française.",
+                text: "Tu es un expert en dictées françaises. Analyse cette image et extrais UNIQUEMENT les mots destinés à être dictés.\n\nRÈGLES D'EXTRACTION :\n1. IGNORE complètement : les titres, en-têtes de colonnes (ex: 'Noms', 'Verbes', 'Adjectifs'), numéros de liste, labels de catégories\n2. GARDE uniquement : les mots et expressions qui seraient prononcés lors d'une dictée\n3. Identifie les mots COMPLETS avec leurs déterminants (ex: 'l'antilope', 'une tapisserie', 'le siècle')\n4. Garde les mots composés ensemble (ex: 'aujourd'hui', 'c'est-à-dire')\n5. Préserve les accents et la ponctuation interne\n\nFORMAT DE SORTIE :\n- Retourne UNIQUEMENT les mots séparés par des virgules\n- Pas de numérotation, pas de catégorisation\n- Un mot par expression (ex: 'une tapisserie' est un mot complet)\n\nExemple : Si l'image contient un tableau avec 'Noms : une maison, le jardin', tu retournes : une maison, le jardin",
               },
               {
                 inline_data: {

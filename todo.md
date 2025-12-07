@@ -41,3 +41,11 @@
 - [x] Ajouter le bouton d'upload de photo pour correction dans le contexte de la dictée
 - [x] Tester toutes les corrections
 - [x] Créer le checkpoint final
+
+## Amélioration de l'extraction
+
+- [x] Améliorer le prompt pour filtrer les en-têtes et numéros
+- [x] Améliorer le prompt pour ne garder que les vrais mots de dictée
+- [x] Tester l'extraction avec l'image fournie
+- [x] Tester la génération de dictée
+- [x] Créer le checkpoint final

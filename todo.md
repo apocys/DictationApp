@@ -49,3 +49,15 @@
 - [x] Tester l'extraction avec l'image fournie
 - [x] Tester la génération de dictée
 - [x] Créer le checkpoint final
+
+## Correction de la génération de dictée
+
+- [x] Corriger la fonction generateDictation qui retourne une chaîne vide (problème de quota API)
+- [x] Tester la génération de dictée avec l'application publiée
+
+## Correction de l'erreur JSON dans l'historique
+
+- [x] Corriger le parsing JSON dans la page History
+- [x] Nettoyer les données corrompues dans la base de données
+- [x] Tester l'historique
+- [x] Créer le checkpoint final

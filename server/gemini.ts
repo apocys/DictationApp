@@ -108,9 +108,21 @@ export async function generateDictation(
       }
     );
 
+    console.log('=== Gemini generateDictation Response ===');
+    console.log('Full response:', JSON.stringify(response.data, null, 2));
+    console.log('Candidates:', response.data.candidates);
+    console.log('First candidate:', response.data.candidates?.[0]);
+    console.log('Content:', response.data.candidates?.[0]?.content);
+    console.log('Parts:', response.data.candidates?.[0]?.content?.parts);
+    console.log('Text:', response.data.candidates?.[0]?.content?.parts?.[0]?.text);
+    
     const text =
       response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
+    console.log('Final extracted text:', text);
+    console.log('Text length:', text.length);
+    console.log('==========================================');
+    
     return text.trim();
   } catch (error) {
     console.error("Error generating dictation:", error);

@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM dictationSessions WHERE words NOT LIKE '[%' AND words NOT LIKE '{%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2JtANKwmfy7pjQT.5a8dbca1f9d2 --database FVFQvtgMB9ZeU9wEM7x8zz --execute DELETE FROM dictationSessions WHERE words NOT LIKE '[%' AND words NOT LIKE '{%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 58
+}

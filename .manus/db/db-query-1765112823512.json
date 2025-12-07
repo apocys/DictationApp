@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, userId, words, createdAt FROM dictationSessions ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2JtANKwmfy7pjQT.5a8dbca1f9d2 --database FVFQvtgMB9ZeU9wEM7x8zz --execute SELECT id, userId, words, createdAt FROM dictationSessions ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "180002",
+      "userId": "1",
+      "words": "[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]",
+      "createdAt": "2025-12-07 13:06:40"
+    },
+    {
+      "id": "180001",
+      "userId": "1",
+      "words": "[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]",
+      "createdAt": "2025-12-07 12:54:13"
+    },
+    {
+      "id": "150003",
+      "userId": "1",
+      "words": "[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]",
+      "createdAt": "2025-12-07 12:36:08"
+    },
+    {
+      "id": "150002",
+      "userId": "1",
+      "words": "[]",
+      "createdAt": "2025-12-07 12:35:20"
+    },
+    {
+      "id": "150001",
+      "userId": "1",
+      "words": "[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]",
+      "createdAt": "2025-12-07 12:31:19"
+    },
+    {
+      "id": "120002",
+      "userId": "1",
+      "words": "[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]",
+      "createdAt": "2025-12-07 12:23:04"
+    },
+    {
+      "id": "120001",
+      "userId": "1",
+      "words": "[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]",
+      "createdAt": "2025-12-07 12:17:51"
+    },
+    {
+      "id": "90002",
+      "userId": "1",
+      "words": "[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]",
+      "createdAt": "2025-12-07 12:06:13"
+    },
+    {
+      "id": "90001",
+      "userId": "1",
+      "words": "[]",
+      "createdAt": "2025-12-07 12:02:43"
+    },
+    {
+      "id": "60001",
+      "userId": "1",
+      "words": "[]",
+      "createdAt": "2025-12-07 11:47:46"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\twords\tcreatedAt\n180002\t1\t[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]\t2025-12-07 13:06:40\n180001\t1\t[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]\t2025-12-07 12:54:13\n150003\t1\t[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]\t2025-12-07 12:36:08\n150002\t1\t[]\t2025-12-07 12:35:20\n150001\t1\t[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]\t2025-12-07 12:31:19\n120002\t1\t[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]\t2025-12-07 12:23:04\n120001\t1\t[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]\t2025-12-07 12:17:51\n90002\t1\t[\"une tapisserie\",\"le siècle\",\"une fresque\",\"le document\",\"un mètre\",\"une façon\",\"l'histoire\",\"un conquérant\",\"célèbre\",\"unique\",\"précis/e\",\"le duc\",\"le roi\",\"un trône\",\"l'absence\",\"un Français\",\"un Anglais\",\"la couronne\",\"la place\",\"l'époque\",\"la broderie\",\"la conquête\",\"un aperçu\",\"demander\",\"succéder\",\"donner\",\"précieux/précieuse\",\"mais\",\"donc\",\"la comète\",\"un soldat\",\"la technique\",\"le ciel\",\"apprendre\",\"combattre\",\"apercevoir\",\"traverser\",\"équipé\",\"comment\",\"même\"]\t2025-12-07 12:06:13\n90001\t1\t[]\t2025-12-07 12:02:43\n60001\t1\t[]\t2025-12-07 11:47:46\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

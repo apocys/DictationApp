@@ -23,11 +23,21 @@ export default function History() {
 
   // Combiner les dictées et corrections dans l'historique
   const history = [
-    ...(dictations || []).map((d: any) => ({
-      ...d,
-      type: 'dictation' as const,
-      words: JSON.parse(d.words),
-    })),
+    ...(dictations || []).map((d: any) => {
+      let parsedWords = [];
+      try {
+        parsedWords = JSON.parse(d.words);
+      } catch (error) {
+        console.error('Error parsing words for dictation:', d.id, error);
+        // Si le parsing échoue, essayer de split par virgule comme fallback
+        parsedWords = typeof d.words === 'string' ? d.words.split(',').map((w: string) => w.trim()) : [];
+      }
+      return {
+        ...d,
+        type: 'dictation' as const,
+        words: parsedWords,
+      };
+    }),
     ...(corrections || []).map((c: any) => ({
       ...c,
       type: 'correction' as const,

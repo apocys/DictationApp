@@ -121,6 +121,25 @@ export async function generateDictation(
 
     console.log('Final extracted text:', text);
     console.log('Text length:', text.length);
+    
+    // Vérifier si Gemini a retourné une erreur ou un texte vide
+    if (!text || text.trim().length === 0) {
+      console.error('Gemini returned empty text!');
+      console.error('Full response data:', JSON.stringify(response.data, null, 2));
+      
+      // Vérifier s'il y a une erreur dans la réponse
+      if (response.data.error) {
+        throw new Error(`Gemini API error: ${response.data.error.message || 'Unknown error'}`);
+      }
+      
+      // Vérifier si les candidates sont vides ou bloqués
+      if (!response.data.candidates || response.data.candidates.length === 0) {
+        throw new Error('Gemini n\'a retourné aucun candidat. Vérifiez votre quota API.');
+      }
+      
+      throw new Error('Gemini a retourné un texte vide. Veuillez réessayer.');
+    }
+    
     console.log('==========================================');
     
     return text.trim();

@@ -61,3 +61,9 @@
 - [x] Nettoyer les données corrompues dans la base de données
 - [x] Tester l'historique
 - [x] Créer le checkpoint final
+
+## Amélioration de la gestion d'erreur generateDictation
+
+- [x] Améliorer la gestion d'erreur pour propager les erreurs Gemini au frontend
+- [x] Tester avec une nouvelle tentative de génération
+- [x] Créer le checkpoint final

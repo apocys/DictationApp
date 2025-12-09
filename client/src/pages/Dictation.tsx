@@ -26,6 +26,11 @@ export default function Dictation() {
   const [isReadingDictation, setIsReadingDictation] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [audioPlaybackRate, setAudioPlaybackRate] = useState(1);
+  const [repeatCount, setRepeatCount] = useState(1);
+  const [currentRepeat, setCurrentRepeat] = useState(0);
   const [speechRate, setSpeechRate] = useState(0.8);
   const [speechVolume, setSpeechVolume] = useState(1.0);
   const [correctionImageFile, setCorrectionImageFile] = useState<File | null>(null);
@@ -287,11 +292,29 @@ export default function Dictation() {
     } else {
       // Créer un nouvel objet Audio
       const audio = new Audio(audioUrl);
-      audio.onended = () => {
-        setIsReadingDictation(false);
-        setIsPaused(false);
-        audioRef.current = null;
+      audio.playbackRate = audioPlaybackRate;
+      
+      audio.onloadedmetadata = () => {
+        setAudioDuration(audio.duration);
       };
+      
+      audio.ontimeupdate = () => {
+        setAudioProgress(audio.currentTime);
+      };
+      
+      audio.onended = () => {
+        if (currentRepeat < repeatCount - 1) {
+          setCurrentRepeat(prev => prev + 1);
+          audio.currentTime = 0;
+          audio.play();
+        } else {
+          setIsReadingDictation(false);
+          setIsPaused(false);
+          setCurrentRepeat(0);
+          audioRef.current = null;
+        }
+      };
+      
       audioRef.current = audio;
       audio.play();
     }
@@ -322,6 +345,28 @@ export default function Dictation() {
     }
     setIsReadingDictation(false);
     setIsPaused(false);
+    setAudioProgress(0);
+    setCurrentRepeat(0);
+  };
+
+  const seekAudio = (time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setAudioProgress(time);
+    }
+  };
+
+  const changePlaybackRate = (rate: number) => {
+    setAudioPlaybackRate(rate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleCorrectionImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -670,6 +715,59 @@ export default function Dictation() {
                         </div>
                       </div>
                       
+                       {/* Barre de progression audio */}
+                      {audioUrl && audioDuration > 0 && (
+                        <div className="space-y-1 mb-3">
+                          <input
+                            type="range"
+                            min="0"
+                            max={audioDuration}
+                            value={audioProgress}
+                            onChange={(e) => seekAudio(Number(e.target.value))}
+                            className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            style={{
+                              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(audioProgress / audioDuration) * 100}%, #e5e7eb ${(audioProgress / audioDuration) * 100}%, #e5e7eb 100%)`
+                            }}
+                          />
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>{formatTime(audioProgress)}</span>
+                            <span>{formatTime(audioDuration)}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Contrôles de vitesse et répétition */}
+                      {audioUrl && (
+                        <div className="flex gap-4 mb-3 text-sm">
+                          <div className="flex items-center gap-2 flex-1">
+                            <Label className="text-xs whitespace-nowrap">Vitesse: {audioPlaybackRate}x</Label>
+                            <input
+                              type="range"
+                              min="0.5"
+                              max="2"
+                              step="0.1"
+                              value={audioPlaybackRate}
+                              onChange={(e) => changePlaybackRate(Number(e.target.value))}
+                              className="flex-1 h-1"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Label className="text-xs whitespace-nowrap">Répéter:</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={repeatCount}
+                              onChange={(e) => setRepeatCount(Number(e.target.value))}
+                              className="w-16 h-8 text-xs"
+                            />
+                            {currentRepeat > 0 && (
+                              <span className="text-xs text-gray-500">({currentRepeat + 1}/{repeatCount})</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                        <div className="flex gap-2">
                         {!audioUrl ? (
                           <Button 

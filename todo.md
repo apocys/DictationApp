@@ -175,3 +175,9 @@
 - [x] Vérifier que les pauses `<break time="1s" />` et `<break time="1.5s" />` sont bien envoyées à ElevenLabs
 - [x] Le bouton Retour dans l'historique redirige vers la page de correction au lieu de la page d'accueil
 - [x] L'audio et la dictée ne sont pas chargés quand on ouvre une session depuis l'historique
+
+## Nouvelles fonctionnalités UX audio
+
+- [x] Ajouter une barre de progression audio fine sous les boutons
+- [x] Ajouter un slider de vitesse de lecture compact dans les contrôles vocaux
+- [x] Ajouter un mode répétition avec bouton icône simple

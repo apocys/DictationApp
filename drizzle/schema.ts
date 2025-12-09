@@ -51,6 +51,7 @@ export const dictationSessions = mysqlTable("dictationSessions", {
   imageUrl: text("imageUrl").notNull(),
   words: text("words").notNull(), // JSON array of words
   generatedDictation: text("generatedDictation"), // Texte de la dictée générée
+  audioUrl: text("audioUrl"), // URL de l'audio généré par ElevenLabs
   isFavorite: int("isFavorite").default(0).notNull(), // 0 = false, 1 = true
   tags: text("tags"), // JSON array of tags
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -154,3 +154,10 @@
 
 - [x] La dictée générée est tronquée (s'arrête prématurément)
 - [x] Les boutons Éditer et Copier se chevauchent dans le textarea
+
+## Nouvelles fonctionnalités
+
+- [x] Ajouter un indicateur de progression avec compteur de mots pendant la génération
+- [x] Ajouter le champ audioUrl dans le schéma de base de données
+- [x] Modifier l'endpoint pour sauvegarder l'URL audio
+- [x] Ajouter un bouton de téléchargement MP3 pour usage hors ligne

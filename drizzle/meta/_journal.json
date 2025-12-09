@@ -57,6 +57,13 @@
       "when": 1765270781945,
       "tag": "0007_mute_viper",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1765274834553,
+      "tag": "0008_sudden_jetstream",
+      "breakpoints": true
     }
   ]
 }

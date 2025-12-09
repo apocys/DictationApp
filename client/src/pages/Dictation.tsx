@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
-import { Copy, Loader2, Pause, Play, Upload } from "lucide-react";
+import { Copy, Download, Loader2, Pause, Play, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -22,6 +22,7 @@ export default function Dictation() {
   const [intervalSeconds, setIntervalSeconds] = useState(5);
   const [generatedDictation, setGeneratedDictation] = useState("");
   const [isEditingDictation, setIsEditingDictation] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isReadingDictation, setIsReadingDictation] = useState(false);
   const [speechRate, setSpeechRate] = useState(0.8);
   const [speechVolume, setSpeechVolume] = useState(1.0);
@@ -124,6 +125,8 @@ export default function Dictation() {
   const generateAudioMutation = trpc.dictation.generateDictationAudio.useMutation({
     onSuccess: (data) => {
       if (data.audioUrl) {
+        // Sauvegarder l'URL audio
+        setAudioUrl(data.audioUrl);
         // Jouer l'audio généré par ElevenLabs
         const audio = new Audio(data.audioUrl);
         audio.onended = () => setIsReadingDictation(false);
@@ -279,7 +282,10 @@ export default function Dictation() {
       return;
     }
     // Essayer de générer l'audio avec ElevenLabs
-    generateAudioMutation.mutate({ text: generatedDictation });
+    generateAudioMutation.mutate({ 
+      text: generatedDictation,
+      sessionId: currentSessionId 
+    });
   };
 
   const stopDictation = () => {
@@ -544,7 +550,7 @@ export default function Dictation() {
                     {generateDictationMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Génération...
+                        Génération en cours... {wordsToUse}/{words.length} mots
                       </>
                     ) : (
                       "Générer une dictée"
@@ -633,7 +639,7 @@ export default function Dictation() {
                         </div>
                       </div>
                       
-                      <div className="flex gap-2">
+                       <div className="flex gap-2">
                         {!isReadingDictation ? (
                           <Button onClick={speakDictation} className="flex-1">
                             <Play className="mr-2 h-4 w-4" />
@@ -643,6 +649,21 @@ export default function Dictation() {
                           <Button onClick={stopDictation} variant="secondary" className="flex-1">
                             <Pause className="mr-2 h-4 w-4" />
                             Arrêter
+                          </Button>
+                        )}
+                        {audioUrl && (
+                          <Button 
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = audioUrl;
+                              link.download = `dictee-${Date.now()}.mp3`;
+                              link.click();
+                              toast.success("Téléchargement lancé");
+                            }}
+                            variant="outline"
+                            title="Télécharger l'audio"
+                          >
+                            <Download className="h-4 w-4" />
                           </Button>
                         )}
                       </div>

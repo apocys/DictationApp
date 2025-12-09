@@ -331,3 +331,15 @@ export async function updateDictationSessionText(sessionId: number, dictationTex
     .set({ generatedDictation: dictationText })
     .where(eq(dictationSessions.id, sessionId));
 }
+
+export async function updateDictationSessionAudio(sessionId: number, audioUrl: string): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update audio URL: database not available");
+    return;
+  }
+
+  await db.update(dictationSessions)
+    .set({ audioUrl })
+    .where(eq(dictationSessions.id, sessionId));
+}

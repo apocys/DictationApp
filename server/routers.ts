@@ -145,10 +145,11 @@ export const appRouter = router({
       .input(
         z.object({
           text: z.string().min(1, "Texte requis"),
+          sessionId: z.number().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const { getApiKeyByUserId } = await import("./db");
+        const { getApiKeyByUserId, updateDictationSessionAudio } = await import("./db");
         const { generateSpeech } = await import("./elevenlabs");
         const { storagePut } = await import("./storage");
 
@@ -171,6 +172,11 @@ export const appRouter = router({
         const randomSuffix = Math.random().toString(36).substring(7);
         const fileKey = `${ctx.user.id}-dictations/audio-${Date.now()}-${randomSuffix}.mp3`;
         const { url } = await storagePut(fileKey, audioBuffer, "audio/mpeg");
+
+        // Sauvegarder l'URL audio dans la session si sessionId est fourni
+        if (input.sessionId) {
+          await updateDictationSessionAudio(input.sessionId, url);
+        }
 
         return { audioUrl: url };
       }),

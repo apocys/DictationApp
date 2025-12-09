@@ -1,0 +1,1 @@
+ALTER TABLE `dictationSessions` ADD `audioUrl` text;

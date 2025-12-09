@@ -161,3 +161,9 @@
 - [x] Ajouter le champ audioUrl dans le schéma de base de données
 - [x] Modifier l'endpoint pour sauvegarder l'URL audio
 - [x] Ajouter un bouton de téléchargement MP3 pour usage hors ligne
+
+## Améliorations audio
+
+- [x] Ajouter des pauses dans le prompt vocal : `<break time="1s" />` après "," et `<break time="1.5s" />` après "."
+- [x] Séparer les boutons : un pour générer l'audio, un pour lire l'audio existant
+- [x] Éviter les doubles générations en désactivant le bouton pendant le traitement

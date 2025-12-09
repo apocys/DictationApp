@@ -44,8 +44,9 @@ export async function generateSpeech(
   voiceId: string = "21m00Tcm4TlvDq8ikWAM"
 ): Promise<Buffer> {
   try {
-    // Ajouter des pauses aux virgules
-    const textWithPauses = text.replace(/,/g, ', <break time="0.8s" />');
+    // Ajouter des pauses aux virgules et aux points
+    let textWithPauses = text.replace(/,/g, ',<break time="1s" />');
+    textWithPauses = textWithPauses.replace(/\./g, '.<break time="1.5s" />');
     
     console.log('=== ElevenLabs generateSpeech ===');
     console.log('Voice ID:', voiceId);

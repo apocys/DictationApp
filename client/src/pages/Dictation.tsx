@@ -127,20 +127,13 @@ export default function Dictation() {
       if (data.audioUrl) {
         // Sauvegarder l'URL audio
         setAudioUrl(data.audioUrl);
-        // Jouer l'audio généré par ElevenLabs
-        const audio = new Audio(data.audioUrl);
-        audio.onended = () => setIsReadingDictation(false);
-        audio.play();
-        setIsReadingDictation(true);
+        toast.success("Audio généré avec succès");
       } else {
-        // Fallback: utiliser la synthèse vocale du navigateur
-        useBrowserSpeech();
+        toast.error("Impossible de générer l'audio. Vérifiez votre clé API ElevenLabs.");
       }
     },
     onError: (error) => {
       toast.error(`Erreur audio: ${error.message}`);
-      // Fallback en cas d'erreur
-      useBrowserSpeech();
     },
   });
 
@@ -276,17 +269,7 @@ export default function Dictation() {
     }
   };
 
-  const speakDictation = () => {
-    if (!generatedDictation) {
-      toast.error("Veuillez d'abord générer une dictée");
-      return;
-    }
-    // Essayer de générer l'audio avec ElevenLabs
-    generateAudioMutation.mutate({ 
-      text: generatedDictation,
-      sessionId: currentSessionId 
-    });
-  };
+
 
   const stopDictation = () => {
     setIsReadingDictation(false);
@@ -640,31 +623,68 @@ export default function Dictation() {
                       </div>
                       
                        <div className="flex gap-2">
-                        {!isReadingDictation ? (
-                          <Button onClick={speakDictation} className="flex-1">
-                            <Play className="mr-2 h-4 w-4" />
-                            Lire la dictée
-                          </Button>
-                        ) : (
-                          <Button onClick={stopDictation} variant="secondary" className="flex-1">
-                            <Pause className="mr-2 h-4 w-4" />
-                            Arrêter
-                          </Button>
-                        )}
-                        {audioUrl && (
+                        {!audioUrl ? (
                           <Button 
                             onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = audioUrl;
-                              link.download = `dictee-${Date.now()}.mp3`;
-                              link.click();
-                              toast.success("Téléchargement lancé");
+                              if (!generatedDictation) {
+                                toast.error("Veuillez d'abord générer une dictée");
+                                return;
+                              }
+                              generateAudioMutation.mutate({ 
+                                text: generatedDictation,
+                                sessionId: currentSessionId 
+                              });
                             }}
-                            variant="outline"
-                            title="Télécharger l'audio"
+                            disabled={generateAudioMutation.isPending}
+                            className="flex-1"
                           >
-                            <Download className="h-4 w-4" />
+                            {generateAudioMutation.isPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Génération audio...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="mr-2 h-4 w-4" />
+                                Générer l'audio
+                              </>
+                            )}
                           </Button>
+                        ) : (
+                          <>
+                            {!isReadingDictation ? (
+                              <Button 
+                                onClick={() => {
+                                  const audio = new Audio(audioUrl);
+                                  audio.onended = () => setIsReadingDictation(false);
+                                  audio.play();
+                                  setIsReadingDictation(true);
+                                }}
+                                className="flex-1"
+                              >
+                                <Play className="mr-2 h-4 w-4" />
+                                Lire l'audio
+                              </Button>
+                            ) : (
+                              <Button onClick={stopDictation} variant="secondary" className="flex-1">
+                                <Pause className="mr-2 h-4 w-4" />
+                                Arrêter
+                              </Button>
+                            )}
+                            <Button 
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = audioUrl;
+                                link.download = `dictee-${Date.now()}.mp3`;
+                                link.click();
+                                toast.success("Téléchargement lancé");
+                              }}
+                              variant="outline"
+                              title="Télécharger l'audio"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                       </div>
                       <div className="mt-4 p-4 border-2 border-dashed rounded-lg">

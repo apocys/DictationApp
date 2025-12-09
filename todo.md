@@ -121,3 +121,8 @@
 - [x] Corriger l'erreur de génération de dictée avec Gemini (erreur 500)
 - [x] Tester toutes les fonctionnalités
 - [x] Créer le checkpoint final
+
+## Bugs critiques à corriger
+
+- [x] L'historique affiche "0 mots extraits" alors que 40 mots ont été extraits
+- [x] Le chargement depuis l'historique redirige vers une page vide sans contenu

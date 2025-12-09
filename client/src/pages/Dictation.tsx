@@ -46,33 +46,32 @@ export default function Dictation() {
 
   // Charger les mots depuis les paramètres d'URL si présents
   useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1] || '');
+    const params = new URLSearchParams(window.location.search);
     const sessionIdParam = params.get('sessionId');
     const wordsParam = params.get('words');
     
-    // Si on a un sessionId, charger la session complète
-    if (sessionIdParam && allSessions) {
-      const sessionId = parseInt(sessionIdParam);
-      setCurrentSessionId(sessionId);
-      
-      const session = allSessions.find((s: any) => s.id === sessionId);
-      if (session && session.words && session.words.length > 0) {
-        setWords(session.words);
-        if (session.generatedDictation) {
-          setGeneratedDictation(session.generatedDictation);
-        }
-        toast.success(`${session.words.length} mots chargés depuis l'historique`);
-      }
-    } else if (wordsParam && !sessionIdParam) {
-      // Fallback: charger depuis le paramètre words si pas de sessionId
+    // Prioriser le paramètre words de l'URL (chargement immédiat)
+    if (wordsParam) {
       try {
         const decodedWords = JSON.parse(decodeURIComponent(wordsParam));
         if (Array.isArray(decodedWords) && decodedWords.length > 0) {
           setWords(decodedWords);
+          if (sessionIdParam) {
+            setCurrentSessionId(parseInt(sessionIdParam));
+          }
           toast.success(`${decodedWords.length} mots chargés depuis l'historique`);
         }
       } catch (error) {
         console.error('Error parsing words from URL:', error);
+      }
+    }
+    
+    // Charger la dictée générée depuis la session si disponible
+    if (sessionIdParam && allSessions) {
+      const sessionId = parseInt(sessionIdParam);
+      const session = allSessions.find((s: any) => s.id === sessionId);
+      if (session && session.generatedDictation) {
+        setGeneratedDictation(session.generatedDictation);
       }
     }
   }, [location, allSessions]);

@@ -24,6 +24,19 @@ export const appRouter = router({
       const { getApiKeyByUserId } = await import("./db");
       return getApiKeyByUserId(ctx.user.id);
     }),
+    getElevenlabsVoices: protectedProcedure.query(async ({ ctx }) => {
+      const { getApiKeyByUserId } = await import("./db");
+      const { getVoices } = await import("./elevenlabs");
+      
+      const apiKeyRecord = await getApiKeyByUserId(ctx.user.id);
+      
+      if (!apiKeyRecord?.elevenlabsApiKey) {
+        return { voices: [] };
+      }
+      
+      const voices = await getVoices(apiKeyRecord.elevenlabsApiKey);
+      return { voices };
+    }),
     saveApiKey: protectedProcedure
       .input(
         z.object({
@@ -115,6 +128,18 @@ export const appRouter = router({
         }
 
         return { dictationText };
+      }),
+    updateDictation: protectedProcedure
+      .input(
+        z.object({
+          sessionId: z.number(),
+          dictationText: z.string().min(1, "Texte requis"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { updateDictationSessionText } = await import("./db");
+        await updateDictationSessionText(input.sessionId, input.dictationText);
+        return { success: true };
       }),
     generateDictationAudio: protectedProcedure
       .input(

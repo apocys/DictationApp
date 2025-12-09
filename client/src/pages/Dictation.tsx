@@ -20,7 +20,8 @@ export default function Dictation() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [intervalSeconds, setIntervalSeconds] = useState(5);
-  const [generatedDictation, setGeneratedDictation] = useState<string>("");
+  const [generatedDictation, setGeneratedDictation] = useState("");
+  const [isEditingDictation, setIsEditingDictation] = useState(false);
   const [isReadingDictation, setIsReadingDictation] = useState(false);
   const [speechRate, setSpeechRate] = useState(0.8);
   const [speechVolume, setSpeechVolume] = useState(1.0);
@@ -137,6 +138,15 @@ export default function Dictation() {
       toast.error(`Erreur audio: ${error.message}`);
       // Fallback en cas d'erreur
       useBrowserSpeech();
+    },
+  });
+
+  const updateDictationMutation = trpc.dictation.updateDictation.useMutation({
+    onSuccess: () => {
+      toast.success("Dictée sauvegardée");
+    },
+    onError: (error) => {
+      toast.error(`Erreur: ${error.message}`);
     },
   });
 
@@ -545,24 +555,48 @@ export default function Dictation() {
                   </div>
                   {generatedDictation && (
                     <>
-                      <div className="relative">
+                       <div className="relative">
                         <textarea
                           value={generatedDictation}
-                          readOnly
-                          className="w-full min-h-[200px] p-4 border rounded-lg bg-gray-50 text-sm text-gray-700 resize-y"
+                          onChange={(e) => setGeneratedDictation(e.target.value)}
+                          readOnly={!isEditingDictation}
+                          className={`w-full min-h-[200px] p-4 border rounded-lg text-sm text-gray-700 resize-y ${
+                            isEditingDictation ? 'bg-white border-blue-500' : 'bg-gray-50'
+                          }`}
                           style={{ lineHeight: '1.6' }}
                         />
-                        <Button
-                          onClick={() => {
-                            navigator.clipboard.writeText(generatedDictation);
-                            toast.success("Texte copié dans le presse-papiers");
-                          }}
-                          variant="outline"
-                          size="sm"
-                          className="absolute top-2 right-2"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
+                        <div className="absolute top-2 right-2 flex gap-2">
+                          <Button
+                            onClick={() => {
+                              if (isEditingDictation) {
+                                // Sauvegarder la dictée éditée
+                                if (currentSessionId) {
+                                  updateDictationMutation.mutate({
+                                    sessionId: currentSessionId,
+                                    dictationText: generatedDictation
+                                  });
+                                }
+                                setIsEditingDictation(false);
+                              } else {
+                                setIsEditingDictation(true);
+                              }
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            {isEditingDictation ? 'Sauvegarder' : 'Éditer'}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              navigator.clipboard.writeText(generatedDictation);
+                              toast.success("Texte copié dans le presse-papiers");
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="space-y-4 p-4 bg-gray-50 rounded-lg">

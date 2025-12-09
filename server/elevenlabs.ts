@@ -7,6 +7,37 @@ import axios from "axios";
  * @param voiceId ID de la voix à utiliser
  * @returns Buffer contenant le fichier audio MP3
  */
+/**
+ * Récupère la liste des voix disponibles depuis le compte ElevenLabs
+ * @param apiKey Clé API ElevenLabs
+ * @returns Liste des voix avec id, nom et langue
+ */
+export async function getVoices(apiKey: string): Promise<Array<{ id: string; name: string; labels: Record<string, string> }>> {
+  try {
+    const response = await axios.get(
+      "https://api.elevenlabs.io/v1/voices",
+      {
+        headers: {
+          "xi-api-key": apiKey
+        }
+      }
+    );
+    
+    return response.data.voices.map((voice: any) => ({
+      id: voice.voice_id,
+      name: voice.name,
+      labels: voice.labels || {}
+    }));
+  } catch (error) {
+    console.error("Error fetching ElevenLabs voices:", error);
+    if (axios.isAxiosError(error)) {
+      const errorMessage = error.response?.data?.detail?.message || error.message;
+      throw new Error(`Erreur API ElevenLabs: ${errorMessage}`);
+    }
+    throw error;
+  }
+}
+
 export async function generateSpeech(
   text: string,
   apiKey: string,

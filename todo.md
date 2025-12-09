@@ -141,3 +141,11 @@
 - [x] Adapter le prompt de génération pour enfants de 10 ans (accords, pluriels, passé composé)
 - [x] Remplacer la synthèse vocale du navigateur par ElevenLabs
 - [x] Tester la génération vocale avec pauses et vitesse ralentie
+
+## Améliorations ElevenLabs et édition de dictée
+
+- [x] Créer un endpoint pour récupérer les voix depuis le compte ElevenLabs de l'utilisateur
+- [x] Modifier le frontend pour charger dynamiquement les voix dans le dropdown
+- [x] Ajouter un mode édition pour la dictée générée
+- [x] Créer l'endpoint backend pour sauvegarder la dictée éditée
+- [x] Tester le chargement des voix et l'édition de dictée

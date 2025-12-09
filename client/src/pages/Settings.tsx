@@ -17,6 +17,14 @@ export default function Settings() {
   const [wordInterval, setWordInterval] = useState(5);
   const [elevenlabsApiKey, setElevenlabsApiKey] = useState("");
   const [elevenlabsVoiceId, setElevenlabsVoiceId] = useState("21m00Tcm4TlvDq8ikWAM");
+  const [voices, setVoices] = useState<Array<{ id: string; name: string; labels: Record<string, string> }>>([]);
+
+  const { data: voicesData } = trpc.apiKeys.getElevenlabsVoices.useQuery(
+    undefined,
+    {
+      enabled: !!user && !!elevenlabsApiKey,
+    }
+  );
 
   const { data: existingApiKey, isLoading: loadingApiKey } = trpc.apiKeys.get.useQuery(
     undefined,
@@ -48,6 +56,12 @@ export default function Settings() {
       setElevenlabsVoiceId(existingApiKey.elevenlabsVoiceId);
     }
   }, [existingApiKey]);
+
+  useEffect(() => {
+    if (voicesData?.voices) {
+      setVoices(voicesData.voices);
+    }
+  }, [voicesData]);
 
   const handleSave = () => {
     if (!apiKey.trim()) {
@@ -171,15 +185,17 @@ export default function Settings() {
                 value={elevenlabsVoiceId}
                 onChange={(e) => setElevenlabsVoiceId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!elevenlabsApiKey || voices.length === 0}
               >
-                <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Femme, anglais)</option>
-                <option value="pNInz6obpgDQGcFmaJgB">Adam (Homme, anglais)</option>
-                <option value="ThT5KcBeYPX3keUQqHPh">Dorothy (Femme, anglais)</option>
-                <option value="EXAVITQu4vr4xnSDxMaL">Sarah (Femme, anglais)</option>
-                <option value="cgSgspJ2msm6clMCkdW9">Jessica (Femme, anglais)</option>
-                <option value="iP95p4xoKVk53GoZ742B">Chris (Homme, anglais)</option>
-                <option value="onwK4e9ZLuTAKqWW03F9">Daniel (Homme, anglais)</option>
-                <option value="XB0fDUnXU5powFXDhCwa">Charlotte (Femme, anglais)</option>
+                {voices.length === 0 ? (
+                  <option value="">Entrez d'abord votre clé API et sauvegardez</option>
+                ) : (
+                  voices.map((voice) => (
+                    <option key={voice.id} value={voice.id}>
+                      {voice.name} {voice.labels.accent ? `(${voice.labels.accent})` : ''}
+                    </option>
+                  ))
+                )}
               </select>
               <p className="text-sm text-gray-500">
                 Sélectionnez la voix pour la lecture de la dictée

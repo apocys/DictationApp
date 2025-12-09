@@ -423,11 +423,12 @@ export default function Dictation() {
                   </div>
                   {generatedDictation && (
                     <>
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                          {generatedDictation}
-                        </p>
-                      </div>
+                      <textarea
+                        value={generatedDictation}
+                        readOnly
+                        className="w-full min-h-[200px] p-4 border rounded-lg bg-gray-50 text-sm text-gray-700 resize-y"
+                        style={{ lineHeight: '1.6' }}
+                      />
                       <div className="flex gap-2">
                         {!isReadingDictation ? (
                           <Button onClick={speakDictation} className="flex-1">

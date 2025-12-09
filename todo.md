@@ -90,3 +90,14 @@
 - [x] Ajouter les filtres (favoris, par tag)
 - [x] Tester toutes les fonctionnalités
 - [x] Créer le checkpoint final
+
+## Correction du formatage de la dictée générée
+
+- [x] Corriger le prompt de génération de dictée pour retourner du texte brut sans astérisques
+- [x] Tester la génération de dictée
+- [x] Créer le checkpoint final
+
+## Amélioration de l'affichage de la dictée
+
+- [x] Remplacer l'input par un textarea multiligne pour afficher la dictée
+- [x] Créer le checkpoint final

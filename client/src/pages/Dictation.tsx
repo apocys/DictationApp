@@ -13,7 +13,7 @@ import { useLocation } from "wouter";
 
 export default function Dictation() {
   const { user, loading: authLoading } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [words, setWords] = useState<string[]>([]);
@@ -34,6 +34,23 @@ export default function Dictation() {
       setIntervalSeconds(apiKeyData.wordInterval);
     }
   }, [apiKeyData]);
+
+  // Charger les mots depuis les paramètres d'URL si présents
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1] || '');
+    const wordsParam = params.get('words');
+    if (wordsParam) {
+      try {
+        const decodedWords = JSON.parse(decodeURIComponent(wordsParam));
+        if (Array.isArray(decodedWords) && decodedWords.length > 0) {
+          setWords(decodedWords);
+          toast.success(`${decodedWords.length} mots chargés depuis l'historique`);
+        }
+      } catch (error) {
+        console.error('Error parsing words from URL:', error);
+      }
+    }
+  }, [location]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 

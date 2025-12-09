@@ -67,3 +67,12 @@
 - [x] Améliorer la gestion d'erreur pour propager les erreurs Gemini au frontend
 - [x] Tester avec une nouvelle tentative de génération
 - [x] Créer le checkpoint final
+
+## Historique des uploads d'images
+
+- [x] Ajouter le champ imageUrl dans le schéma dictationSessions (déjà présent)
+- [x] Mettre à jour l'endpoint extractWords pour sauvegarder l'URL de l'image (déjà implémenté)
+- [x] Améliorer la page History pour afficher les images uploadées
+- [x] Permettre de cliquer sur une session pour recharger les mots
+- [x] Tester l'historique complet
+- [x] Créer le checkpoint final

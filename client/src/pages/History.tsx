@@ -242,7 +242,9 @@ export default function History() {
                         if (item.type === 'correction') {
                           setLocation(`/correction/${item.id}`);
                         } else {
-                          setLocation('/dictation');
+                          // Passer les mots et l'ID de session en paramètres
+                          const wordsParam = encodeURIComponent(JSON.stringify(item.words));
+                          setLocation(`/dictation?sessionId=${item.id}&words=${wordsParam}`);
                         }
                       }}
                     >
@@ -268,6 +270,15 @@ export default function History() {
                               })}
                             </span>
                           </div>
+                          {item.type === 'dictation' && item.imageUrl && (
+                            <div className="mb-2">
+                              <img 
+                                src={item.imageUrl} 
+                                alt="Image de dictée" 
+                                className="w-32 h-32 object-cover rounded border"
+                              />
+                            </div>
+                          )}
                           <p className="text-sm text-gray-700 line-clamp-2">
                             {item.type === 'correction' ? item.originalText : `${item.words.length} mots extraits`}
                           </p>

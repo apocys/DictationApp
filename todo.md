@@ -167,3 +167,11 @@
 - [x] Ajouter des pauses dans le prompt vocal : `<break time="1s" />` après "," et `<break time="1.5s" />` après "."
 - [x] Séparer les boutons : un pour générer l'audio, un pour lire l'audio existant
 - [x] Éviter les doubles générations en désactivant le bouton pendant le traitement
+
+## Bugs critiques à corriger
+
+- [x] Le bouton Stop ne stoppe pas la lecture audio
+- [x] Ajouter un bouton Pause/Resume pour la lecture audio
+- [x] Vérifier que les pauses `<break time="1s" />` et `<break time="1.5s" />` sont bien envoyées à ElevenLabs
+- [x] Le bouton Retour dans l'historique redirige vers la page de correction au lieu de la page d'accueil
+- [x] L'audio et la dictée ne sont pas chargés quand on ouvre une session depuis l'historique

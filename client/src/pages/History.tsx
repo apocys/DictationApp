@@ -212,7 +212,7 @@ export default function History() {
             </div>
             <Button
               variant="outline"
-              onClick={() => setLocation("/correction")}
+              onClick={() => setLocation("/")}
             >
               ← Retour
             </Button>

@@ -24,6 +24,8 @@ export default function Dictation() {
   const [isEditingDictation, setIsEditingDictation] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isReadingDictation, setIsReadingDictation] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [speechRate, setSpeechRate] = useState(0.8);
   const [speechVolume, setSpeechVolume] = useState(1.0);
   const [correctionImageFile, setCorrectionImageFile] = useState<File | null>(null);
@@ -75,12 +77,17 @@ export default function Dictation() {
       }
     }
     
-    // Charger la dictée générée depuis la session si disponible
+    // Charger la dictée générée et l'audio depuis la session si disponible
     if (sessionIdParam && allSessions) {
       const sessionId = parseInt(sessionIdParam);
       const session = allSessions.find((s: any) => s.id === sessionId);
-      if (session && session.generatedDictation) {
-        setGeneratedDictation(session.generatedDictation);
+      if (session) {
+        if (session.generatedDictation) {
+          setGeneratedDictation(session.generatedDictation);
+        }
+        if (session.audioUrl) {
+          setAudioUrl(session.audioUrl);
+        }
       }
     }
   }, [location, allSessions]);
@@ -271,9 +278,50 @@ export default function Dictation() {
 
 
 
-  const stopDictation = () => {
+  const playAudio = () => {
+    if (!audioUrl) return;
+    
+    if (audioRef.current) {
+      // Si l'audio existe déjà, le reprendre
+      audioRef.current.play();
+    } else {
+      // Créer un nouvel objet Audio
+      const audio = new Audio(audioUrl);
+      audio.onended = () => {
+        setIsReadingDictation(false);
+        setIsPaused(false);
+        audioRef.current = null;
+      };
+      audioRef.current = audio;
+      audio.play();
+    }
+    
+    setIsReadingDictation(true);
+    setIsPaused(false);
+  };
+
+  const pauseAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPaused(true);
+    }
+  };
+
+  const resumeAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play();
+      setIsPaused(false);
+    }
+  };
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
     setIsReadingDictation(false);
-    window.speechSynthesis.cancel();
+    setIsPaused(false);
   };
 
   const handleCorrectionImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -654,22 +702,29 @@ export default function Dictation() {
                           <>
                             {!isReadingDictation ? (
                               <Button 
-                                onClick={() => {
-                                  const audio = new Audio(audioUrl);
-                                  audio.onended = () => setIsReadingDictation(false);
-                                  audio.play();
-                                  setIsReadingDictation(true);
-                                }}
+                                onClick={playAudio}
                                 className="flex-1"
                               >
                                 <Play className="mr-2 h-4 w-4" />
-                                Lire l'audio
+                                Lire
                               </Button>
                             ) : (
-                              <Button onClick={stopDictation} variant="secondary" className="flex-1">
-                                <Pause className="mr-2 h-4 w-4" />
-                                Arrêter
-                              </Button>
+                              <>
+                                {!isPaused ? (
+                                  <Button onClick={pauseAudio} variant="secondary" className="flex-1">
+                                    <Pause className="mr-2 h-4 w-4" />
+                                    Pause
+                                  </Button>
+                                ) : (
+                                  <Button onClick={resumeAudio} className="flex-1">
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Reprendre
+                                  </Button>
+                                )}
+                                <Button onClick={stopAudio} variant="destructive">
+                                  Stop
+                                </Button>
+                              </>
                             )}
                             <Button 
                               onClick={() => {

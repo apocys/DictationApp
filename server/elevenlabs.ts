@@ -50,6 +50,8 @@ export async function generateSpeech(
     
     console.log('=== ElevenLabs generateSpeech ===');
     console.log('Voice ID:', voiceId);
+    console.log('Original text:', text);
+    console.log('Text with pauses:', textWithPauses);
     console.log('Original text length:', text.length);
     console.log('Text with pauses length:', textWithPauses.length);
     

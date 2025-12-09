@@ -89,8 +89,16 @@ async function tryGenerateDictation(
   const maxLength = Math.min(300, length + 30);
   
   const prompt = useSimplePrompt
-    ? `Écris un court texte en français (environ ${length} mots) qui utilise ces mots : ${wordList}. Réponds uniquement avec le texte, sans titre ni formatage.`
-    : `Écris une dictée en français d'environ ${minLength}-${maxLength} mots qui utilise TOUS les mots suivants de manière naturelle et cohérente : ${wordList}. La dictée doit être un texte continu et fluide, pas une liste de phrases séparées. Assure-toi que tous les mots de la liste sont utilisés au moins une fois.
+    ? `Écris un court texte en français simple (environ ${length} mots) adapté à un enfant de 10 ans qui utilise ces mots : ${wordList}. Utilise un vocabulaire simple et des phrases courtes. Réponds uniquement avec le texte, sans titre ni formatage.`
+    : `Écris une dictée en français d'environ ${minLength}-${maxLength} mots adaptée à un enfant de 10 ans (niveau CM2) qui utilise TOUS les mots suivants : ${wordList}.
+
+CONSIGNES PÉDAGOGIQUES :
+- Utilise un vocabulaire simple et adapté à l'âge (10 ans)
+- Construis des phrases courtes et claires (maximum 15-20 mots par phrase)
+- Inclus des difficultés appropriées : accords (nom-adjectif, sujet-verbe), pluriels, passé composé
+- Crée un texte narratif ou descriptif cohérent et intéressant pour un enfant
+- Évite le vocabulaire trop complexe ou abstrait
+- Assure-toi que tous les mots de la liste sont utilisés au moins une fois
 
 IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'autre. Pas de titre, pas d'introduction, pas de commentaire, pas de formatage markdown (pas d'astérisques **), pas d'explication. Juste le texte brut de la dictée qui commence directement par la première phrase.`;
   

@@ -102,7 +102,13 @@ export async function getApiKeyByUserId(userId: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function upsertApiKey(userId: number, geminiApiKey: string, wordInterval?: number) {
+export async function upsertApiKey(
+  userId: number, 
+  geminiApiKey: string, 
+  wordInterval?: number,
+  elevenlabsApiKey?: string,
+  elevenlabsVoiceId?: string
+) {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot upsert API key: database not available");
@@ -119,6 +125,14 @@ export async function upsertApiKey(userId: number, geminiApiKey: string, wordInt
     values.wordInterval = wordInterval;
   }
   
+  if (elevenlabsApiKey !== undefined) {
+    values.elevenlabsApiKey = elevenlabsApiKey;
+  }
+  
+  if (elevenlabsVoiceId !== undefined) {
+    values.elevenlabsVoiceId = elevenlabsVoiceId;
+  }
+  
   const updateSet: any = {
     geminiApiKey,
     updatedAt: new Date(),
@@ -126,6 +140,14 @@ export async function upsertApiKey(userId: number, geminiApiKey: string, wordInt
   
   if (wordInterval !== undefined) {
     updateSet.wordInterval = wordInterval;
+  }
+  
+  if (elevenlabsApiKey !== undefined) {
+    updateSet.elevenlabsApiKey = elevenlabsApiKey;
+  }
+  
+  if (elevenlabsVoiceId !== undefined) {
+    updateSet.elevenlabsVoiceId = elevenlabsVoiceId;
   }
   
   await db.insert(apiKeys).values(values).onDuplicateKeyUpdate({

@@ -132,3 +132,12 @@
 - [x] Afficher tous les prompts dans une section "Avancé" des paramètres globaux
 - [x] Ajouter des contrôles pour configurer la longueur de la dictée
 - [x] Ajouter un contrôle pour spécifier le nombre de mots à utiliser dans la dictée
+
+## Intégration ElevenLabs pour la voix
+
+- [x] Ajouter la clé API ElevenLabs dans les paramètres globaux
+- [x] Ajouter un dropdown de sélection de voix ElevenLabs dans les paramètres
+- [x] Créer la fonction d'intégration ElevenLabs avec pauses aux virgules
+- [x] Adapter le prompt de génération pour enfants de 10 ans (accords, pluriels, passé composé)
+- [x] Remplacer la synthèse vocale du navigateur par ElevenLabs
+- [x] Tester la génération vocale avec pauses et vitesse ralentie

@@ -120,6 +120,26 @@ export default function Dictation() {
     },
   });
 
+  const generateAudioMutation = trpc.dictation.generateDictationAudio.useMutation({
+    onSuccess: (data) => {
+      if (data.audioUrl) {
+        // Jouer l'audio généré par ElevenLabs
+        const audio = new Audio(data.audioUrl);
+        audio.onended = () => setIsReadingDictation(false);
+        audio.play();
+        setIsReadingDictation(true);
+      } else {
+        // Fallback: utiliser la synthèse vocale du navigateur
+        useBrowserSpeech();
+      }
+    },
+    onError: (error) => {
+      toast.error(`Erreur audio: ${error.message}`);
+      // Fallback en cas d'erreur
+      useBrowserSpeech();
+    },
+  });
+
   const analyzeCorrectionMutation = trpc.correction.analyze.useMutation({
     onSuccess: (data) => {
       toast.success("Correction terminée !");
@@ -228,11 +248,7 @@ export default function Dictation() {
     });
   };
 
-  const speakDictation = () => {
-    if (!generatedDictation) {
-      toast.error("Veuillez d'abord générer une dictée");
-      return;
-    }
+  const useBrowserSpeech = () => {
     if ('speechSynthesis' in window) {
       setIsReadingDictation(true);
       window.speechSynthesis.cancel();
@@ -245,6 +261,15 @@ export default function Dictation() {
       };
       window.speechSynthesis.speak(utterance);
     }
+  };
+
+  const speakDictation = () => {
+    if (!generatedDictation) {
+      toast.error("Veuillez d'abord générer une dictée");
+      return;
+    }
+    // Essayer de générer l'audio avec ElevenLabs
+    generateAudioMutation.mutate({ text: generatedDictation });
   };
 
   const stopDictation = () => {

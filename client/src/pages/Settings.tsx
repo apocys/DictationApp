@@ -15,6 +15,8 @@ export default function Settings() {
   const [, setLocation] = useLocation();
   const [apiKey, setApiKey] = useState("");
   const [wordInterval, setWordInterval] = useState(5);
+  const [elevenlabsApiKey, setElevenlabsApiKey] = useState("");
+  const [elevenlabsVoiceId, setElevenlabsVoiceId] = useState("21m00Tcm4TlvDq8ikWAM");
 
   const { data: existingApiKey, isLoading: loadingApiKey } = trpc.apiKeys.get.useQuery(
     undefined,
@@ -39,14 +41,25 @@ export default function Settings() {
     if (existingApiKey?.wordInterval) {
       setWordInterval(existingApiKey.wordInterval);
     }
+    if (existingApiKey?.elevenlabsApiKey) {
+      setElevenlabsApiKey(existingApiKey.elevenlabsApiKey);
+    }
+    if (existingApiKey?.elevenlabsVoiceId) {
+      setElevenlabsVoiceId(existingApiKey.elevenlabsVoiceId);
+    }
   }, [existingApiKey]);
 
   const handleSave = () => {
     if (!apiKey.trim()) {
-      toast.error("Veuillez entrer une clé API");
+      toast.error("Veuillez entrer une clé API Gemini");
       return;
     }
-    saveApiKeyMutation.mutate({ geminiApiKey: apiKey, wordInterval });
+    saveApiKeyMutation.mutate({ 
+      geminiApiKey: apiKey, 
+      wordInterval,
+      elevenlabsApiKey: elevenlabsApiKey.trim() || undefined,
+      elevenlabsVoiceId 
+    });
   };
 
   if (authLoading || loadingApiKey) {
@@ -121,22 +134,76 @@ export default function Settings() {
                 Délai entre chaque mot lors de la lecture (1-60 secondes)
               </p>
             </div>
-            <Button
-              onClick={handleSave}
-              disabled={saveApiKeyMutation.isPending}
-              className="w-full"
-            >
-              {saveApiKeyMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sauvegarde...
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>ElevenLabs (Synthèse vocale)</CardTitle>
+            <CardDescription>
+              Configurez ElevenLabs pour générer la voix de la dictée. Vous pouvez obtenir une clé API sur{" "}
+              <a
+                href="https://elevenlabs.io/app/settings/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                ElevenLabs
+              </a>
+              . (Optionnel - si non configuré, la synthèse vocale du navigateur sera utilisée)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="elevenlabsApiKey">Clé API ElevenLabs (optionnel)</Label>
+              <Input
+                id="elevenlabsApiKey"
+                type="password"
+                placeholder="sk_..."
+                value={elevenlabsApiKey}
+                onChange={(e) => setElevenlabsApiKey(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="elevenlabsVoiceId">Voix</Label>
+              <select
+                id="elevenlabsVoiceId"
+                value={elevenlabsVoiceId}
+                onChange={(e) => setElevenlabsVoiceId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Femme, anglais)</option>
+                <option value="pNInz6obpgDQGcFmaJgB">Adam (Homme, anglais)</option>
+                <option value="ThT5KcBeYPX3keUQqHPh">Dorothy (Femme, anglais)</option>
+                <option value="EXAVITQu4vr4xnSDxMaL">Sarah (Femme, anglais)</option>
+                <option value="cgSgspJ2msm6clMCkdW9">Jessica (Femme, anglais)</option>
+                <option value="iP95p4xoKVk53GoZ742B">Chris (Homme, anglais)</option>
+                <option value="onwK4e9ZLuTAKqWW03F9">Daniel (Homme, anglais)</option>
+                <option value="XB0fDUnXU5powFXDhCwa">Charlotte (Femme, anglais)</option>
+              </select>
+              <p className="text-sm text-gray-500">
+                Sélectionnez la voix pour la lecture de la dictée
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-6">
+          <Button
+            onClick={handleSave}
+            disabled={saveApiKeyMutation.isPending}
+            className="w-full"
+          >
+            {saveApiKeyMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sauvegarde...
                 </>
               ) : (
                 "Sauvegarder"
               )}
             </Button>
-          </CardContent>
-        </Card>
+          </div>
 
         <Card className="mt-6">
           <CardHeader>

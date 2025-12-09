@@ -33,6 +33,8 @@ export const apiKeys = mysqlTable("apiKeys", {
   userId: int("userId").notNull().unique(),
   geminiApiKey: text("geminiApiKey").notNull(),
   wordInterval: int("wordInterval").default(5).notNull(), // Intervalle en secondes entre les mots
+  elevenlabsApiKey: text("elevenlabsApiKey"), // Clé API ElevenLabs (optionnelle)
+  elevenlabsVoiceId: varchar("elevenlabsVoiceId", { length: 64 }).default("21m00Tcm4TlvDq8ikWAM"), // Voice ID ElevenLabs (Rachel par défaut)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

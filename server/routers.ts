@@ -29,11 +29,19 @@ export const appRouter = router({
         z.object({
           geminiApiKey: z.string().min(1, "Clé API requise"),
           wordInterval: z.number().min(1).max(60).optional(),
+          elevenlabsApiKey: z.string().optional(),
+          elevenlabsVoiceId: z.string().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
         const { upsertApiKey } = await import("./db");
-        await upsertApiKey(ctx.user.id, input.geminiApiKey, input.wordInterval);
+        await upsertApiKey(
+          ctx.user.id, 
+          input.geminiApiKey, 
+          input.wordInterval,
+          input.elevenlabsApiKey,
+          input.elevenlabsVoiceId
+        );
         return { success: true };
       }),
   }),
@@ -107,6 +115,39 @@ export const appRouter = router({
         }
 
         return { dictationText };
+      }),
+    generateDictationAudio: protectedProcedure
+      .input(
+        z.object({
+          text: z.string().min(1, "Texte requis"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { getApiKeyByUserId } = await import("./db");
+        const { generateSpeech } = await import("./elevenlabs");
+        const { storagePut } = await import("./storage");
+
+        // Récupérer les clés API de l'utilisateur
+        const apiKeyRecord = await getApiKeyByUserId(ctx.user.id);
+        
+        // Si pas de clé ElevenLabs, retourner null (utiliser la synthèse du navigateur)
+        if (!apiKeyRecord?.elevenlabsApiKey) {
+          return { audioUrl: null };
+        }
+
+        // Générer l'audio avec ElevenLabs
+        const audioBuffer = await generateSpeech(
+          input.text,
+          apiKeyRecord.elevenlabsApiKey,
+          apiKeyRecord.elevenlabsVoiceId || "21m00Tcm4TlvDq8ikWAM"
+        );
+
+        // Uploader l'audio vers S3
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const fileKey = `${ctx.user.id}-dictations/audio-${Date.now()}-${randomSuffix}.mp3`;
+        const { url } = await storagePut(fileKey, audioBuffer, "audio/mpeg");
+
+        return { audioUrl: url };
       }),
     deleteSession: protectedProcedure
       .input(z.object({ sessionId: z.number() }))

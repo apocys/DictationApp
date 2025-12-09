@@ -116,7 +116,7 @@ IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'
       ],
       generationConfig: {
         temperature: useSimplePrompt ? 0.5 : 0.7,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
       },
     },
     {

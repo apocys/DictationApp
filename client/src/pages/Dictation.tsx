@@ -560,12 +560,12 @@ export default function Dictation() {
                           value={generatedDictation}
                           onChange={(e) => setGeneratedDictation(e.target.value)}
                           readOnly={!isEditingDictation}
-                          className={`w-full min-h-[200px] p-4 border rounded-lg text-sm text-gray-700 resize-y ${
+                          className={`w-full min-h-[200px] p-4 pr-24 border rounded-lg text-sm text-gray-700 resize-y ${
                             isEditingDictation ? 'bg-white border-blue-500' : 'bg-gray-50'
                           }`}
                           style={{ lineHeight: '1.6' }}
                         />
-                        <div className="absolute top-2 right-2 flex gap-2">
+                        <div className="absolute top-2 right-2 flex flex-col gap-2">
                           <Button
                             onClick={() => {
                               if (isEditingDictation) {

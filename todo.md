@@ -149,3 +149,8 @@
 - [x] Ajouter un mode édition pour la dictée générée
 - [x] Créer l'endpoint backend pour sauvegarder la dictée éditée
 - [x] Tester le chargement des voix et l'édition de dictée
+
+## Bugs à corriger
+
+- [x] La dictée générée est tronquée (s'arrête prématurément)
+- [x] Les boutons Éditer et Copier se chevauchent dans le textarea

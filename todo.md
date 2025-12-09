@@ -76,3 +76,17 @@
 - [x] Permettre de cliquer sur une session pour recharger les mots
 - [x] Tester l'historique complet
 - [x] Créer le checkpoint final
+
+## Améliorations de l'historique
+
+- [x] Ajouter les champs isFavorite et tags dans le schéma dictationSessions
+- [x] Créer l'endpoint pour supprimer une session
+- [x] Créer l'endpoint pour marquer/démarquer une session comme favorite
+- [x] Créer l'endpoint pour ajouter/modifier les tags d'une session
+- [x] Implémenter la recherche dans l'historique (par mots, tags, date)
+- [x] Ajouter les boutons de suppression dans l'interface
+- [x] Ajouter le système d'étoile pour les favoris
+- [x] Créer l'interface de gestion des tags
+- [x] Ajouter les filtres (favoris, par tag)
+- [x] Tester toutes les fonctionnalités
+- [x] Créer le checkpoint final

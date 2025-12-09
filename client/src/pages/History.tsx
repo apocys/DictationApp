@@ -6,10 +6,19 @@ import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 import { Loader2, TrendingUp, Calendar, Target } from "lucide-react";
 import { useLocation } from "wouter";
+import { Input } from "@/components/ui/input";
+import { Star, Trash2, Tag, Search } from "lucide-react";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export default function History() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  
+  const utils = trpc.useUtils();
 
   const { data: corrections, isLoading: correctionsLoading } = trpc.correction.getHistory.useQuery(undefined, {
     enabled: !!user,
@@ -17,6 +26,35 @@ export default function History() {
 
   const { data: dictations, isLoading: dictationsLoading } = trpc.dictation.getSessions.useQuery(undefined, {
     enabled: !!user,
+  });
+
+  const deleteSessionMutation = trpc.dictation.deleteSession.useMutation({
+    onSuccess: () => {
+      utils.dictation.getSessions.invalidate();
+      toast.success("Session supprimée avec succès");
+    },
+    onError: (error: any) => {
+      toast.error(`Erreur: ${error.message}`);
+    },
+  });
+
+  const toggleFavoriteMutation = trpc.dictation.toggleFavorite.useMutation({
+    onSuccess: () => {
+      utils.dictation.getSessions.invalidate();
+    },
+    onError: (error: any) => {
+      toast.error(`Erreur: ${error.message}`);
+    },
+  });
+
+  const updateTagsMutation = trpc.dictation.updateTags.useMutation({
+    onSuccess: () => {
+      utils.dictation.getSessions.invalidate();
+      toast.success("Tags mis à jour");
+    },
+    onError: (error: any) => {
+      toast.error(`Erreur: ${error.message}`);
+    },
   });
 
   const isLoading = correctionsLoading || dictationsLoading;
@@ -43,6 +81,43 @@ export default function History() {
       type: 'correction' as const,
     })),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // Filtrer l'historique selon la recherche et les filtres
+  const filteredHistory = history.filter((item: any) => {
+    // Filtre par recherche
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesWords = item.words && item.words.some((w: string) => w.toLowerCase().includes(query));
+      const matchesTags = item.tags && JSON.parse(item.tags || '[]').some((t: string) => t.toLowerCase().includes(query));
+      if (!matchesWords && !matchesTags) return false;
+    }
+
+    // Filtre par favoris
+    if (showFavoritesOnly && item.type === 'dictation' && item.isFavorite !== 1) {
+      return false;
+    }
+
+    // Filtre par tag
+    if (selectedTag && item.type === 'dictation') {
+      const tags = JSON.parse(item.tags || '[]');
+      if (!tags.includes(selectedTag)) return false;
+    }
+
+    return true;
+  });
+
+  // Extraire tous les tags uniques
+  const allTags = Array.from(new Set(
+    (dictations || [])
+      .flatMap((d: any) => {
+        try {
+          return JSON.parse(d.tags || '[]');
+        } catch {
+          return [];
+        }
+      })
+      .filter(Boolean)
+  )) as string[];
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "bg-green-100 text-green-800";
@@ -152,6 +227,56 @@ export default function History() {
             </Button>
           </div>
 
+          {/* Barre de recherche et filtres */}
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Rechercher par mots ou tags..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button
+                  variant={showFavoritesOnly ? "default" : "outline"}
+                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                  className="flex items-center gap-2"
+                >
+                  <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                  Favoris
+                </Button>
+              </div>
+              {allTags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-sm text-gray-600 flex items-center gap-1">
+                    <Tag className="h-4 w-4" />
+                    Tags:
+                  </span>
+                  <Button
+                    variant={selectedTag === null ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedTag(null)}
+                  >
+                    Tous
+                  </Button>
+                  {allTags.map((tag) => (
+                    <Button
+                      key={tag}
+                      variant={selectedTag === tag ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedTag(tag)}
+                    >
+                      {tag}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {stats && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
@@ -215,7 +340,7 @@ export default function History() {
             </div>
           )}
 
-          {!history || history.length === 0 ? (
+          {!filteredHistory || filteredHistory.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-gray-500 mb-4">Aucune correction pour le moment</p>
@@ -234,22 +359,23 @@ export default function History() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {history.map((item: any) => (
+                  {filteredHistory.map((item: any) => (
                     <div
                       key={`${item.type}-${item.id}`}
-                      className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => {
-                        if (item.type === 'correction') {
-                          setLocation(`/correction/${item.id}`);
-                        } else {
-                          // Passer les mots et l'ID de session en paramètres
-                          const wordsParam = encodeURIComponent(JSON.stringify(item.words));
-                          setLocation(`/dictation?sessionId=${item.id}&words=${wordsParam}`);
-                        }
-                      }}
+                      className="border rounded-lg p-4 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => {
+                            if (item.type === 'correction') {
+                              setLocation(`/correction/${item.id}`);
+                            } else {
+                              const wordsParam = encodeURIComponent(JSON.stringify(item.words));
+                              setLocation(`/dictation?sessionId=${item.id}&words=${wordsParam}`);
+                            }
+                          }}
+                        >
                           <div className="flex items-center gap-2 mb-2">
                             {item.type === 'correction' ? (
                               <Badge className={getScoreColor(item.score)}>
@@ -259,6 +385,19 @@ export default function History() {
                               <Badge className="bg-blue-100 text-blue-800">
                                 Dictée créée
                               </Badge>
+                            )}
+                            {item.type === 'dictation' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavoriteMutation.mutate({ sessionId: item.id });
+                                }}
+                                className="p-1 h-auto"
+                              >
+                                <Star className={`h-4 w-4 ${item.isFavorite === 1 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} />
+                              </Button>
                             )}
                             <span className="text-xs text-gray-500">
                               {new Date(item.createdAt).toLocaleDateString("fr-FR", {
@@ -292,9 +431,24 @@ export default function History() {
                           </div>
                         )}
                         {item.type === 'dictation' && (
-                          <div className="text-right ml-4">
-                            <p className="text-2xl font-bold text-gray-900">{item.words.length}</p>
-                            <p className="text-xs text-gray-500">mots</p>
+                          <div className="flex flex-col items-end gap-2 ml-4">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('Voulez-vous vraiment supprimer cette session ?')) {
+                                  deleteSessionMutation.mutate({ sessionId: item.id });
+                                }
+                              }}
+                              className="p-1 h-auto text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-gray-900">{item.words.length}</p>
+                              <p className="text-xs text-gray-500">mots</p>
+                            </div>
                           </div>
                         )}
                       </div>

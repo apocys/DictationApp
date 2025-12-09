@@ -165,6 +165,30 @@ export const appRouter = router({
         const { getDictationCorrectionById } = await import("./db");
         return getDictationCorrectionById(input.id, ctx.user.id);
       }),
+    deleteSession: protectedProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { deleteDictationSession } = await import("./db");
+        await deleteDictationSession(input.sessionId, ctx.user.id);
+        return { success: true };
+      }),
+    toggleFavorite: protectedProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { toggleSessionFavorite } = await import("./db");
+        await toggleSessionFavorite(input.sessionId, ctx.user.id);
+        return { success: true };
+      }),
+    updateTags: protectedProcedure
+      .input(z.object({ 
+        sessionId: z.number(),
+        tags: z.array(z.string())
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { updateSessionTags } = await import("./db");
+        await updateSessionTags(input.sessionId, ctx.user.id, input.tags);
+        return { success: true };
+      }),
   }),
 });
 

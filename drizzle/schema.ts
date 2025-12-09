@@ -48,6 +48,8 @@ export const dictationSessions = mysqlTable("dictationSessions", {
   userId: int("userId").notNull(),
   imageUrl: text("imageUrl").notNull(),
   words: text("words").notNull(), // JSON array of words
+  isFavorite: int("isFavorite").default(0).notNull(), // 0 = false, 1 = true
+  tags: text("tags"), // JSON array of tags
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

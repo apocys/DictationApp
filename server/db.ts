@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, dictationSessions } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -248,4 +248,52 @@ export async function getDictationCorrectionById(id: number, userId: number) {
     ...results[0],
     errors: JSON.parse(results[0].errors),
   };
+}
+
+
+export async function deleteDictationSession(sessionId: number, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete session: database not available");
+    return;
+  }
+
+  await db.delete(dictationSessions)
+    .where(and(eq(dictationSessions.id, sessionId), eq(dictationSessions.userId, userId)));
+}
+
+export async function toggleSessionFavorite(sessionId: number, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot toggle favorite: database not available");
+    return;
+  }
+
+  // Récupérer la session actuelle
+  const sessions = await db.select().from(dictationSessions)
+    .where(and(eq(dictationSessions.id, sessionId), eq(dictationSessions.userId, userId)))
+    .limit(1);
+
+  if (sessions.length === 0) {
+    throw new Error("Session not found");
+  }
+
+  const currentFavorite = sessions[0]!.isFavorite;
+  const newFavorite = currentFavorite === 1 ? 0 : 1;
+
+  await db.update(dictationSessions)
+    .set({ isFavorite: newFavorite })
+    .where(and(eq(dictationSessions.id, sessionId), eq(dictationSessions.userId, userId)));
+}
+
+export async function updateSessionTags(sessionId: number, userId: number, tags: string[]): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update tags: database not available");
+    return;
+  }
+
+  await db.update(dictationSessions)
+    .set({ tags: JSON.stringify(tags) })
+    .where(and(eq(dictationSessions.id, sessionId), eq(dictationSessions.userId, userId)));
 }

@@ -27,6 +27,8 @@ export default function Dictation() {
   const [correctionImageFile, setCorrectionImageFile] = useState<File | null>(null);
   const [correctionImagePreview, setCorrectionImagePreview] = useState<string>("");
   const [currentSessionId, setCurrentSessionId] = useState<number | undefined>(undefined);
+  const [selectedWords, setSelectedWords] = useState<string[]>([]);
+  const [isProgressiveMode, setIsProgressiveMode] = useState(false);
 
   const { data: apiKeyData } = trpc.apiKeys.get.useQuery(undefined, {
     enabled: !!user,
@@ -38,11 +40,31 @@ export default function Dictation() {
     }
   }, [apiKeyData]);
 
+  const { data: allSessions } = trpc.dictation.getSessions.useQuery(undefined, {
+    enabled: !!user,
+  });
+
   // Charger les mots depuis les paramètres d'URL si présents
   useEffect(() => {
     const params = new URLSearchParams(location.split('?')[1] || '');
+    const sessionIdParam = params.get('sessionId');
     const wordsParam = params.get('words');
-    if (wordsParam) {
+    
+    // Si on a un sessionId, charger la session complète
+    if (sessionIdParam && allSessions) {
+      const sessionId = parseInt(sessionIdParam);
+      setCurrentSessionId(sessionId);
+      
+      const session = allSessions.find((s: any) => s.id === sessionId);
+      if (session && session.words && session.words.length > 0) {
+        setWords(session.words);
+        if (session.generatedDictation) {
+          setGeneratedDictation(session.generatedDictation);
+        }
+        toast.success(`${session.words.length} mots chargés depuis l'historique`);
+      }
+    } else if (wordsParam && !sessionIdParam) {
+      // Fallback: charger depuis le paramètre words si pas de sessionId
       try {
         const decodedWords = JSON.parse(decodeURIComponent(wordsParam));
         if (Array.isArray(decodedWords) && decodedWords.length > 0) {
@@ -53,7 +75,7 @@ export default function Dictation() {
         console.error('Error parsing words from URL:', error);
       }
     }
-  }, [location]);
+  }, [location, allSessions]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -180,7 +202,12 @@ export default function Dictation() {
       toast.error("Veuillez d'abord extraire des mots d'une image");
       return;
     }
-    generateDictationMutation.mutate({ words, sessionId: currentSessionId });
+    if (isProgressiveMode && selectedWords.length === 0) {
+      toast.error("Veuillez sélectionner au moins un mot pour le mode progressif");
+      return;
+    }
+    const wordsToUse = isProgressiveMode ? selectedWords : words;
+    generateDictationMutation.mutate({ words: wordsToUse, sessionId: currentSessionId });
   };
 
   const speakDictation = () => {
@@ -310,12 +337,20 @@ export default function Dictation() {
               Uploadez une image pour extraire et écouter les mots
             </p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setLocation("/settings")}
-          >
-            Paramètres
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/")}
+            >
+              ← Retour
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/settings")}
+            >
+              Paramètres
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-6">
@@ -543,18 +578,68 @@ export default function Dictation() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>4. Mots extraits ({words.length})</CardTitle>
-                  <CardDescription>
-                    Cliquez sur un mot pour reprendre la lecture à partir de celui-ci
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>4. Mots extraits ({words.length})</CardTitle>
+                      <CardDescription>
+                        {isProgressiveMode ? "Sélectionnez les mots pour votre entraînement" : "Cliquez sur un mot pour reprendre la lecture à partir de celui-ci"}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={isProgressiveMode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setIsProgressiveMode(!isProgressiveMode);
+                          if (!isProgressiveMode) {
+                            setSelectedWords([]);
+                          }
+                        }}
+                      >
+                        {isProgressiveMode ? "Mode normal" : "Mode progressif"}
+                      </Button>
+                      {isProgressiveMode && selectedWords.length > 0 && (
+                        <Button
+                          size="sm"
+                          onClick={() => setSelectedWords([])}
+                          variant="ghost"
+                        >
+                          Désélectionner tout
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {isProgressiveMode && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded text-sm text-blue-700">
+                      {selectedWords.length} mot(s) sélectionné(s) pour l'entraînement
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {words.map((word, index) => (
                       <Button
                         key={index}
-                        variant={index === currentWordIndex ? "default" : "outline"}
-                        onClick={() => jumpToWord(index)}
+                        variant={
+                          isProgressiveMode
+                            ? selectedWords.includes(word)
+                              ? "default"
+                              : "outline"
+                            : index === currentWordIndex
+                            ? "default"
+                            : "outline"
+                        }
+                        onClick={() => {
+                          if (isProgressiveMode) {
+                            if (selectedWords.includes(word)) {
+                              setSelectedWords(selectedWords.filter(w => w !== word));
+                            } else {
+                              setSelectedWords([...selectedWords, word]);
+                            }
+                          } else {
+                            jumpToWord(index);
+                          }
+                        }}
                         className="h-auto py-3"
                       >
                         {index + 1}. {word}

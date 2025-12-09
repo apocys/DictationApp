@@ -110,3 +110,14 @@
 - [x] Corriger le bug de suppression dans l'historique
 - [x] Tester toutes les fonctionnalités
 - [x] Créer le checkpoint final
+
+## Nouvelles améliorations demandées
+
+- [x] Afficher les dictées générées dans l'historique avec possibilité de les relire/copier
+- [x] Implémenter le mode d'entraînement progressif (sélection de sous-ensemble de mots)
+- [x] Ajouter un bouton retour sur la page de dictée
+- [x] Corriger le chargement depuis l'historique (sessionId avec words vides)
+- [x] Désactiver le bouton d'extraction pendant le traitement pour éviter les clics multiples
+- [x] Corriger l'erreur de génération de dictée avec Gemini (erreur 500)
+- [x] Tester toutes les fonctionnalités
+- [x] Créer le checkpoint final

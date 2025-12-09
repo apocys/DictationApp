@@ -77,80 +77,90 @@ export async function extractWordsFromImage(
  * @param apiKey Clé API Gemini
  * @returns Texte de la dictée générée
  */
+async function tryGenerateDictation(
+  words: string[],
+  apiKey: string,
+  useSimplePrompt: boolean = false
+): Promise<string> {
+  const wordList = words.join(", ");
+  
+  const prompt = useSimplePrompt
+    ? `Écris un court texte en français (environ 80 mots) qui utilise ces mots : ${wordList}. Réponds uniquement avec le texte, sans titre ni formatage.`
+    : `Écris une dictée en français d'environ 100-150 mots qui utilise TOUS les mots suivants de manière naturelle et cohérente : ${wordList}. La dictée doit être un texte continu et fluide, pas une liste de phrases séparées. Assure-toi que tous les mots de la liste sont utilisés au moins une fois.
+
+IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'autre. Pas de titre, pas d'introduction, pas de commentaire, pas de formatage markdown (pas d'astérisques **), pas d'explication. Juste le texte brut de la dictée qui commence directement par la première phrase.`;
+  
+  const response = await axios.post(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: useSimplePrompt ? 0.5 : 0.7,
+        maxOutputTokens: 1024,
+      },
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  console.log('=== Gemini generateDictation Response ===');
+  console.log('Using simple prompt:', useSimplePrompt);
+  console.log('Candidates:', response.data.candidates);
+  console.log('First candidate:', response.data.candidates?.[0]);
+  
+  // Vérifier le finishReason
+  const finishReason = response.data.candidates?.[0]?.finishReason;
+  console.log('Finish reason:', finishReason);
+  
+  if (finishReason === 'SAFETY' || finishReason === 'RECITATION') {
+    console.error('Content blocked by safety filters:', finishReason);
+    throw new Error(`Contenu bloqué par les filtres de sécurité (${finishReason}). Essayez avec moins de mots.`);
+  }
+  
+  const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  console.log('Final extracted text:', text);
+  console.log('Text length:', text.length);
+  console.log('==========================================');
+  
+  return text;
+}
+
 export async function generateDictation(
   words: string[],
   apiKey: string
 ): Promise<string> {
   try {
-    const wordList = words.join(", ");
+    // Première tentative avec le prompt complet
+    let text = await tryGenerateDictation(words, apiKey, false);
     
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: `Écris une dictée en français d'environ 100-150 mots qui utilise TOUS les mots suivants de manière naturelle et cohérente : ${wordList}. La dictée doit être un texte continu et fluide, pas une liste de phrases séparées. Assure-toi que tous les mots de la liste sont utilisés au moins une fois.
-
-IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'autre. Pas de titre, pas d'introduction, pas de commentaire, pas de formatage markdown (pas d'astérisques **), pas d'explication. Juste le texte brut de la dictée qui commence directement par la première phrase.`,
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-        },
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    console.log('=== Gemini generateDictation Response ===');
-    console.log('Full response:', JSON.stringify(response.data, null, 2));
-    console.log('Candidates:', response.data.candidates);
-    console.log('First candidate:', response.data.candidates?.[0]);
-    console.log('Content:', response.data.candidates?.[0]?.content);
-    console.log('Parts:', response.data.candidates?.[0]?.content?.parts);
-    console.log('Text:', response.data.candidates?.[0]?.content?.parts?.[0]?.text);
-    
-    const text =
-      response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    console.log('Final extracted text:', text);
-    console.log('Text length:', text.length);
-    
-    // Vérifier si Gemini a retourné une erreur ou un texte vide
+    // Si le texte est vide, essayer avec un prompt plus simple
     if (!text || text.trim().length === 0) {
-      console.error('Gemini returned empty text!');
-      console.error('Full response data:', JSON.stringify(response.data, null, 2));
-      
-      // Vérifier s'il y a une erreur dans la réponse
-      if (response.data.error) {
-        throw new Error(`Gemini API error: ${response.data.error.message || 'Unknown error'}`);
-      }
-      
-      // Vérifier si les candidates sont vides ou bloqués
-      if (!response.data.candidates || response.data.candidates.length === 0) {
-        throw new Error('Gemini n\'a retourné aucun candidat. Vérifiez votre quota API.');
-      }
-      
-      throw new Error('Gemini a retourné un texte vide. Veuillez réessayer.');
+      console.log('First attempt returned empty text, trying with simple prompt...');
+      text = await tryGenerateDictation(words, apiKey, true);
     }
     
-    console.log('==========================================');
+    // Vérifier si Gemini a retourné un texte vide après les deux tentatives
+    if (!text || text.trim().length === 0) {
+      throw new Error('Gemini a retourné un texte vide après plusieurs tentatives. Vérifiez votre quota API ou réessayez plus tard.');
+    }
     
     return text.trim();
   } catch (error) {
     console.error("Error generating dictation:", error);
     if (axios.isAxiosError(error)) {
-      throw new Error(
-        `Gemini API error: ${error.response?.data?.error?.message || error.message}`
-      );
+      const errorMessage = error.response?.data?.error?.message || error.message;
+      throw new Error(`Erreur API Gemini: ${errorMessage}`);
     }
     throw error;
   }

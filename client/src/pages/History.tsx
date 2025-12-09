@@ -7,7 +7,7 @@ import { getLoginUrl } from "@/const";
 import { Loader2, TrendingUp, Calendar, Target } from "lucide-react";
 import { useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
-import { Star, Trash2, Tag, Search } from "lucide-react";
+import { Copy, Star, Trash2, Tag, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -421,6 +421,26 @@ export default function History() {
                           <p className="text-sm text-gray-700 line-clamp-2">
                             {item.type === 'correction' ? item.originalText : `${item.words.length} mots extraits`}
                           </p>
+                          {item.type === 'dictation' && item.generatedDictation && (
+                            <div className="mt-3 p-3 bg-gray-50 rounded border">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-medium text-gray-600">Dictée générée :</p>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(item.generatedDictation);
+                                    toast.success("Texte copié dans le presse-papiers");
+                                  }}
+                                  className="p-1 h-auto"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <p className="text-sm text-gray-700 line-clamp-3">{item.generatedDictation}</p>
+                            </div>
+                          )}
                         </div>
                         {item.type === 'correction' && (
                           <div className="text-right ml-4">

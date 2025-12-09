@@ -297,3 +297,15 @@ export async function updateSessionTags(sessionId: number, userId: number, tags:
     .set({ tags: JSON.stringify(tags) })
     .where(and(eq(dictationSessions.id, sessionId), eq(dictationSessions.userId, userId)));
 }
+
+export async function updateDictationSessionText(sessionId: number, dictationText: string): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update dictation text: database not available");
+    return;
+  }
+
+  await db.update(dictationSessions)
+    .set({ generatedDictation: dictationText })
+    .where(eq(dictationSessions.id, sessionId));
+}

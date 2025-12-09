@@ -101,3 +101,12 @@
 
 - [x] Remplacer l'input par un textarea multiligne pour afficher la dictée
 - [x] Créer le checkpoint final
+
+## Améliorations de l'interface de dictée
+
+- [x] Ajouter un bouton de copie pour le texte de la dictée
+- [x] Ajouter des contrôles de vitesse et volume pour la synthèse vocale
+- [x] Implémenter la sauvegarde automatique des dictées générées dans l'historique
+- [x] Corriger le bug de suppression dans l'historique
+- [x] Tester toutes les fonctionnalités
+- [x] Créer le checkpoint final

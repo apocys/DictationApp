@@ -64,10 +64,11 @@ export const appRouter = router({
           apiKeyRecord.geminiApiKey
         );
 
-        // Sauvegarder la session
-        await createDictationSession(ctx.user.id, input.imageUrl, words);
+        // Sauvegarder la session et récupérer l'ID
+        const result = await createDictationSession(ctx.user.id, input.imageUrl, words) as any;
+        const sessionId = result?.insertId ? Number(result.insertId) : undefined;
 
-        return { words };
+        return { words, sessionId };
       }),
     getSessions: protectedProcedure.query(async ({ ctx }) => {
       const { getDictationSessionsByUserId } = await import("./db");
@@ -77,10 +78,11 @@ export const appRouter = router({
       .input(
         z.object({
           words: z.array(z.string()).min(1, "Au moins un mot requis"),
+          sessionId: z.number().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const { getApiKeyByUserId } = await import("./db");
+        const { getApiKeyByUserId, updateDictationSessionText } = await import("./db");
         const { generateDictation } = await import("./gemini");
 
         // Récupérer la clé API de l'utilisateur
@@ -97,7 +99,36 @@ export const appRouter = router({
           apiKeyRecord.geminiApiKey
         );
 
+        // Sauvegarder la dictée générée dans la session si sessionId est fourni
+        if (input.sessionId) {
+          await updateDictationSessionText(input.sessionId, dictationText);
+        }
+
         return { dictationText };
+      }),
+    deleteSession: protectedProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { deleteDictationSession } = await import("./db");
+        await deleteDictationSession(input.sessionId, ctx.user.id);
+        return { success: true };
+      }),
+    toggleFavorite: protectedProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { toggleSessionFavorite } = await import("./db");
+        await toggleSessionFavorite(input.sessionId, ctx.user.id);
+        return { success: true };
+      }),
+    updateTags: protectedProcedure
+      .input(z.object({ 
+        sessionId: z.number(),
+        tags: z.array(z.string())
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { updateSessionTags } = await import("./db");
+        await updateSessionTags(input.sessionId, ctx.user.id, input.tags);
+        return { success: true };
       }),
   }),
 
@@ -164,30 +195,6 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
         const { getDictationCorrectionById } = await import("./db");
         return getDictationCorrectionById(input.id, ctx.user.id);
-      }),
-    deleteSession: protectedProcedure
-      .input(z.object({ sessionId: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        const { deleteDictationSession } = await import("./db");
-        await deleteDictationSession(input.sessionId, ctx.user.id);
-        return { success: true };
-      }),
-    toggleFavorite: protectedProcedure
-      .input(z.object({ sessionId: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        const { toggleSessionFavorite } = await import("./db");
-        await toggleSessionFavorite(input.sessionId, ctx.user.id);
-        return { success: true };
-      }),
-    updateTags: protectedProcedure
-      .input(z.object({ 
-        sessionId: z.number(),
-        tags: z.array(z.string())
-      }))
-      .mutation(async ({ ctx, input }) => {
-        const { updateSessionTags } = await import("./db");
-        await updateSessionTags(input.sessionId, ctx.user.id, input.tags);
-        return { success: true };
       }),
   }),
 });

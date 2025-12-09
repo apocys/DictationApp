@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
-import { Loader2, Pause, Play, Upload } from "lucide-react";
+import { Copy, Loader2, Pause, Play, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -22,8 +22,11 @@ export default function Dictation() {
   const [intervalSeconds, setIntervalSeconds] = useState(5);
   const [generatedDictation, setGeneratedDictation] = useState<string>("");
   const [isReadingDictation, setIsReadingDictation] = useState(false);
+  const [speechRate, setSpeechRate] = useState(0.8);
+  const [speechVolume, setSpeechVolume] = useState(1.0);
   const [correctionImageFile, setCorrectionImageFile] = useState<File | null>(null);
   const [correctionImagePreview, setCorrectionImagePreview] = useState<string>("");
+  const [currentSessionId, setCurrentSessionId] = useState<number | undefined>(undefined);
 
   const { data: apiKeyData } = trpc.apiKeys.get.useQuery(undefined, {
     enabled: !!user,
@@ -58,6 +61,9 @@ export default function Dictation() {
     onSuccess: (data) => {
       setWords(data.words);
       setCurrentWordIndex(0);
+      if (data.sessionId) {
+        setCurrentSessionId(data.sessionId);
+      }
       toast.success(`${data.words.length} mots extraits avec succès`);
     },
     onError: (error) => {
@@ -147,7 +153,8 @@ export default function Dictation() {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(word);
       utterance.lang = 'fr-FR';
-      utterance.rate = 0.8;
+      utterance.rate = speechRate;
+      utterance.volume = speechVolume;
       utteranceRef.current = utterance;
       window.speechSynthesis.speak(utterance);
     }
@@ -173,7 +180,7 @@ export default function Dictation() {
       toast.error("Veuillez d'abord extraire des mots d'une image");
       return;
     }
-    generateDictationMutation.mutate({ words });
+    generateDictationMutation.mutate({ words, sessionId: currentSessionId });
   };
 
   const speakDictation = () => {
@@ -186,7 +193,8 @@ export default function Dictation() {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(generatedDictation);
       utterance.lang = 'fr-FR';
-      utterance.rate = 0.8;
+      utterance.rate = speechRate;
+      utterance.volume = speechVolume;
       utterance.onend = () => {
         setIsReadingDictation(false);
       };
@@ -423,12 +431,60 @@ export default function Dictation() {
                   </div>
                   {generatedDictation && (
                     <>
-                      <textarea
-                        value={generatedDictation}
-                        readOnly
-                        className="w-full min-h-[200px] p-4 border rounded-lg bg-gray-50 text-sm text-gray-700 resize-y"
-                        style={{ lineHeight: '1.6' }}
-                      />
+                      <div className="relative">
+                        <textarea
+                          value={generatedDictation}
+                          readOnly
+                          className="w-full min-h-[200px] p-4 border rounded-lg bg-gray-50 text-sm text-gray-700 resize-y"
+                          style={{ lineHeight: '1.6' }}
+                        />
+                        <Button
+                          onClick={() => {
+                            navigator.clipboard.writeText(generatedDictation);
+                            toast.success("Texte copié dans le presse-papiers");
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 className="font-medium text-sm">Contrôles vocaux</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs text-gray-600 block mb-1">
+                              Vitesse: {speechRate.toFixed(1)}x
+                            </label>
+                            <input
+                              type="range"
+                              min="0.5"
+                              max="2"
+                              step="0.1"
+                              value={speechRate}
+                              onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+                              className="w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-600 block mb-1">
+                              Volume: {Math.round(speechVolume * 100)}%
+                            </label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.1"
+                              value={speechVolume}
+                              onChange={(e) => setSpeechVolume(parseFloat(e.target.value))}
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
                       <div className="flex gap-2">
                         {!isReadingDictation ? (
                           <Button onClick={speakDictation} className="flex-1">

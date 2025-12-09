@@ -43,6 +43,13 @@
       "when": 1765262918961,
       "tag": "0005_oval_chameleon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1765264136759,
+      "tag": "0006_clear_slapstick",
+      "breakpoints": true
     }
   ]
 }

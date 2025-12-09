@@ -29,6 +29,8 @@ export default function Dictation() {
   const [currentSessionId, setCurrentSessionId] = useState<number | undefined>(undefined);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
   const [isProgressiveMode, setIsProgressiveMode] = useState(false);
+  const [dictationLength, setDictationLength] = useState(120);
+  const [wordsToUse, setWordsToUse] = useState(words.length);
 
   const { data: apiKeyData } = trpc.apiKeys.get.useQuery(undefined, {
     enabled: !!user,
@@ -39,6 +41,11 @@ export default function Dictation() {
       setIntervalSeconds(apiKeyData.wordInterval);
     }
   }, [apiKeyData]);
+
+  // Mettre à jour wordsToUse quand words change
+  useEffect(() => {
+    setWordsToUse(words.length);
+  }, [words.length]);
 
   const { data: allSessions } = trpc.dictation.getSessions.useQuery(undefined, {
     enabled: !!user,
@@ -205,8 +212,20 @@ export default function Dictation() {
       toast.error("Veuillez sélectionner au moins un mot pour le mode progressif");
       return;
     }
-    const wordsToUse = isProgressiveMode ? selectedWords : words;
-    generateDictationMutation.mutate({ words: wordsToUse, sessionId: currentSessionId });
+    
+    // Déterminer les mots à utiliser
+    let baseWords = isProgressiveMode ? selectedWords : words;
+    
+    // Limiter le nombre de mots si nécessaire
+    const finalWords = wordsToUse > 0 && wordsToUse < baseWords.length 
+      ? baseWords.slice(0, wordsToUse)
+      : baseWords;
+    
+    generateDictationMutation.mutate({ 
+      words: finalWords, 
+      sessionId: currentSessionId,
+      targetLength: dictationLength 
+    });
   };
 
   const speakDictation = () => {
@@ -446,6 +465,42 @@ export default function Dictation() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="space-y-2">
+                      <Label htmlFor="dictationLength" className="text-sm font-medium">
+                        Longueur de la dictée (mots)
+                      </Label>
+                      <Input
+                        id="dictationLength"
+                        type="number"
+                        min="50"
+                        max="300"
+                        value={dictationLength}
+                        onChange={(e) => setDictationLength(Number(e.target.value))}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-600">
+                        Nombre approximatif de mots dans la dictée générée (50-300)
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="wordsToUse" className="text-sm font-medium">
+                        Nombre de mots à utiliser
+                      </Label>
+                      <Input
+                        id="wordsToUse"
+                        type="number"
+                        min="1"
+                        max={words.length}
+                        value={wordsToUse}
+                        onChange={(e) => setWordsToUse(Number(e.target.value))}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-600">
+                        Nombre de mots de la liste à inclure dans la dictée (max: {words.length})
+                      </p>
+                    </div>
+                  </div>
                   <Button
                     onClick={handleGenerateDictation}
                     disabled={generateDictationMutation.isPending}

@@ -80,13 +80,17 @@ export async function extractWordsFromImage(
 async function tryGenerateDictation(
   words: string[],
   apiKey: string,
-  useSimplePrompt: boolean = false
+  useSimplePrompt: boolean = false,
+  targetLength?: number
 ): Promise<string> {
   const wordList = words.join(", ");
+  const length = targetLength || 120;
+  const minLength = Math.max(50, length - 30);
+  const maxLength = Math.min(300, length + 30);
   
   const prompt = useSimplePrompt
-    ? `Écris un court texte en français (environ 80 mots) qui utilise ces mots : ${wordList}. Réponds uniquement avec le texte, sans titre ni formatage.`
-    : `Écris une dictée en français d'environ 100-150 mots qui utilise TOUS les mots suivants de manière naturelle et cohérente : ${wordList}. La dictée doit être un texte continu et fluide, pas une liste de phrases séparées. Assure-toi que tous les mots de la liste sont utilisés au moins une fois.
+    ? `Écris un court texte en français (environ ${length} mots) qui utilise ces mots : ${wordList}. Réponds uniquement avec le texte, sans titre ni formatage.`
+    : `Écris une dictée en français d'environ ${minLength}-${maxLength} mots qui utilise TOUS les mots suivants de manière naturelle et cohérente : ${wordList}. La dictée doit être un texte continu et fluide, pas une liste de phrases séparées. Assure-toi que tous les mots de la liste sont utilisés au moins une fois.
 
 IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'autre. Pas de titre, pas d'introduction, pas de commentaire, pas de formatage markdown (pas d'astérisques **), pas d'explication. Juste le texte brut de la dictée qui commence directement par la première phrase.`;
   
@@ -138,16 +142,17 @@ IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'
 
 export async function generateDictation(
   words: string[],
-  apiKey: string
+  apiKey: string,
+  targetLength?: number
 ): Promise<string> {
   try {
     // Première tentative avec le prompt complet
-    let text = await tryGenerateDictation(words, apiKey, false);
+    let text = await tryGenerateDictation(words, apiKey, false, targetLength);
     
     // Si le texte est vide, essayer avec un prompt plus simple
     if (!text || text.trim().length === 0) {
       console.log('First attempt returned empty text, trying with simple prompt...');
-      text = await tryGenerateDictation(words, apiKey, true);
+      text = await tryGenerateDictation(words, apiKey, true, targetLength);
     }
     
     // Vérifier si Gemini a retourné un texte vide après les deux tentatives

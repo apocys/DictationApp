@@ -79,6 +79,7 @@ export const appRouter = router({
         z.object({
           words: z.array(z.string()).min(1, "Au moins un mot requis"),
           sessionId: z.number().optional(),
+          targetLength: z.number().min(50).max(300).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -96,7 +97,8 @@ export const appRouter = router({
         // Générer la dictée
         const dictationText = await generateDictation(
           input.words,
-          apiKeyRecord.geminiApiKey
+          apiKeyRecord.geminiApiKey,
+          input.targetLength
         );
 
         // Sauvegarder la dictée générée dans la session si sessionId est fourni

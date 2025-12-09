@@ -137,6 +137,74 @@ export default function Settings() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Avancé</CardTitle>
+            <CardDescription>
+              Prompts système utilisés par l'application (lecture seule)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Prompt d'extraction de mots</Label>
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-xs font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                {`Tu es un expert en dictées françaises. Analyse cette image et extrais UNIQUEMENT les mots destinés à être dictés.
+
+RÈGLES D'EXTRACTION :
+1. IGNORE complètement : les titres, en-têtes de colonnes (ex: 'Noms', 'Verbes', 'Adjectifs'), numéros de liste, labels de catégories
+2. GARDE uniquement : les mots et expressions qui seraient prononcés lors d'une dictée
+3. Identifie les mots COMPLETS avec leurs déterminants (ex: 'l'antilope', 'une tapisserie', 'le siècle')
+4. Garde les mots composés ensemble (ex: 'aujourd'hui', 'c'est-à-dire')
+5. Préserve les accents et la ponctuation interne
+
+FORMAT DE SORTIE :
+- Retourne UNIQUEMENT les mots séparés par des virgules
+- Pas de numérotation, pas de catégorisation
+- Un mot par expression (ex: 'une tapisserie' est un mot complet)`}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Prompt de génération de dictée (complet)</Label>
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-xs font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                {`Écris une dictée en français d'environ 100-150 mots qui utilise TOUS les mots suivants de manière naturelle et cohérente : [liste des mots]. La dictée doit être un texte continu et fluide, pas une liste de phrases séparées. Assure-toi que tous les mots de la liste sont utilisés au moins une fois.
+
+IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'autre. Pas de titre, pas d'introduction, pas de commentaire, pas de formatage markdown (pas d'astérisques **), pas d'explication. Juste le texte brut de la dictée qui commence directement par la première phrase.`}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Prompt de génération de dictée (simplifié - fallback)</Label>
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-xs font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                {`Écris un court texte en français (environ 80 mots) qui utilise ces mots : [liste des mots]. Réponds uniquement avec le texte, sans titre ni formatage.`}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Prompt d'analyse des erreurs</Label>
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-xs font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                {`Tu es un correcteur de dictée expert. Compare le texte original avec le texte écrit par l'utilisateur et identifie TOUTES les erreurs.
+
+Analyse les erreurs et retourne un JSON avec cette structure exacte:
+{
+  "errors": [
+    {
+      "type": "orthographe|grammaire|conjugaison|accord|ponctuation|autre",
+      "original": "mot ou phrase correcte",
+      "user": "ce que l'utilisateur a écrit",
+      "explanation": "explication pédagogique détaillée de l'erreur",
+      "position": numéro_du_mot_dans_le_texte
+    }
+  ],
+  "totalWords": nombre_total_de_mots,
+  "correctWords": nombre_de_mots_corrects,
+  "feedback": "commentaire général encourageant et constructif sur la performance"
+}`}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

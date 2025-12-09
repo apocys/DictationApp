@@ -126,3 +126,9 @@
 
 - [x] L'historique affiche "0 mots extraits" alors que 40 mots ont été extraits
 - [x] Le chargement depuis l'historique redirige vers une page vide sans contenu
+
+## Améliorations de la génération de dictée
+
+- [x] Afficher tous les prompts dans une section "Avancé" des paramètres globaux
+- [x] Ajouter des contrôles pour configurer la longueur de la dictée
+- [x] Ajouter un contrôle pour spécifier le nombre de mots à utiliser dans la dictée

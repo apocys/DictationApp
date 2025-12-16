@@ -101,14 +101,14 @@ export async function getApiKeyByUserId(userId: number) {
   const result = await db.select().from(apiKeys).where(eq(apiKeys.userId, userId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
-
 export async function upsertApiKey(
-  userId: number, 
-  geminiApiKey: string, 
+  userId: number,
+  geminiApiKey: string,
   wordInterval?: number,
   elevenlabsApiKey?: string,
-  elevenlabsVoiceId?: string
-) {
+  elevenlabsVoiceId?: string,
+  enablePauses?: boolean
+): Promise<void> {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot upsert API key: database not available");
@@ -133,6 +133,10 @@ export async function upsertApiKey(
     values.elevenlabsVoiceId = elevenlabsVoiceId;
   }
   
+  if (enablePauses !== undefined) {
+    values.enablePauses = enablePauses;
+  }
+  
   const updateSet: any = {
     geminiApiKey,
     updatedAt: new Date(),
@@ -148,6 +152,10 @@ export async function upsertApiKey(
   
   if (elevenlabsVoiceId !== undefined) {
     updateSet.elevenlabsVoiceId = elevenlabsVoiceId;
+  }
+  
+  if (enablePauses !== undefined) {
+    updateSet.enablePauses = enablePauses;
   }
   
   await db.insert(apiKeys).values(values).onDuplicateKeyUpdate({

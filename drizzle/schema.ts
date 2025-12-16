@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -35,6 +35,7 @@ export const apiKeys = mysqlTable("apiKeys", {
   wordInterval: int("wordInterval").default(5).notNull(), // Intervalle en secondes entre les mots
   elevenlabsApiKey: text("elevenlabsApiKey"), // Clé API ElevenLabs (optionnelle)
   elevenlabsVoiceId: varchar("elevenlabsVoiceId", { length: 64 }).default("21m00Tcm4TlvDq8ikWAM"), // Voice ID ElevenLabs (Rachel par défaut)
+  enablePauses: boolean("enablePauses").default(true).notNull(), // Activer les pauses aux virgules et points
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -17,7 +17,8 @@ export default function Settings() {
   const [wordInterval, setWordInterval] = useState(5);
   const [elevenlabsApiKey, setElevenlabsApiKey] = useState("");
   const [elevenlabsVoiceId, setElevenlabsVoiceId] = useState("21m00Tcm4TlvDq8ikWAM");
-  const [voices, setVoices] = useState<Array<{ id: string; name: string; labels: Record<string, string> }>>([]);
+  const [enablePauses, setEnablePauses] = useState(true);
+  const [voices, setVoices] = useState<Array<{ id: string; name: string; labels: Record<string, string> }>>([]); 
 
   const { data: voicesData } = trpc.apiKeys.getElevenlabsVoices.useQuery(
     undefined,
@@ -55,6 +56,9 @@ export default function Settings() {
     if (existingApiKey?.elevenlabsVoiceId) {
       setElevenlabsVoiceId(existingApiKey.elevenlabsVoiceId);
     }
+    if (existingApiKey?.enablePauses !== undefined) {
+      setEnablePauses(existingApiKey.enablePauses);
+    }
   }, [existingApiKey]);
 
   useEffect(() => {
@@ -72,7 +76,8 @@ export default function Settings() {
       geminiApiKey: apiKey, 
       wordInterval,
       elevenlabsApiKey: elevenlabsApiKey.trim() || undefined,
-      elevenlabsVoiceId 
+      elevenlabsVoiceId,
+      enablePauses
     });
   };
 
@@ -200,6 +205,26 @@ export default function Settings() {
               <p className="text-sm text-gray-500">
                 Sélectionnez la voix pour la lecture de la dictée
               </p>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <Label htmlFor="enablePauses" className="font-medium">Activer les pauses</Label>
+                <p className="text-sm text-gray-500">Ajoute des pauses après les virgules (1s) et les points (1.5s)</p>
+              </div>
+              <button
+                id="enablePauses"
+                type="button"
+                onClick={() => setEnablePauses(!enablePauses)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  enablePauses ? 'bg-blue-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    enablePauses ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </CardContent>
         </Card>

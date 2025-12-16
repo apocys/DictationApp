@@ -181,3 +181,10 @@
 - [x] Ajouter une barre de progression audio fine sous les boutons
 - [x] Ajouter un slider de vitesse de lecture compact dans les contrôles vocaux
 - [x] Ajouter un mode répétition avec bouton icône simple
+
+## Bug ElevenLabs
+
+- [x] Les pauses `<break time="1s" />` ne sont pas prises en compte par ElevenLabs (ajout d'un toggle pour activer/désactiver)
+- [x] Investiguer si ElevenLabs supporte SSML ou un autre format de pauses (confirmé supporté)
+- [x] Ajouter un bouton pour activer/désactiver les pauses
+- [x] Ajouter un bouton "Régénérer l'audio" quand l'audio existe déjà

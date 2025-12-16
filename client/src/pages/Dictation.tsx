@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
-import { Copy, Download, Loader2, Pause, Play, Upload } from "lucide-react";
+import { Copy, Download, Loader2, Pause, Play, RefreshCw, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -824,6 +824,24 @@ export default function Dictation() {
                                 </Button>
                               </>
                             )}
+                            <Button 
+                              onClick={() => {
+                                setAudioUrl("");
+                                generateAudioMutation.mutate({ 
+                                  text: generatedDictation, 
+                                  sessionId: currentSessionId 
+                                });
+                              }}
+                              variant="outline"
+                              title="Régénérer l'audio"
+                              disabled={generateAudioMutation.isPending}
+                            >
+                              {generateAudioMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-4 w-4" />
+                              )}
+                            </Button>
                             <Button 
                               onClick={() => {
                                 const link = document.createElement('a');

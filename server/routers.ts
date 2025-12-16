@@ -41,9 +41,10 @@ export const appRouter = router({
       .input(
         z.object({
           geminiApiKey: z.string().min(1, "Clé API requise"),
-          wordInterval: z.number().min(1).max(60).optional(),
+          wordInterval: z.number().optional(),
           elevenlabsApiKey: z.string().optional(),
           elevenlabsVoiceId: z.string().optional(),
+          enablePauses: z.boolean().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -53,7 +54,8 @@ export const appRouter = router({
           input.geminiApiKey, 
           input.wordInterval,
           input.elevenlabsApiKey,
-          input.elevenlabsVoiceId
+          input.elevenlabsVoiceId,
+          input.enablePauses
         );
         return { success: true };
       }),
@@ -165,7 +167,8 @@ export const appRouter = router({
         const audioBuffer = await generateSpeech(
           input.text,
           apiKeyRecord.elevenlabsApiKey,
-          apiKeyRecord.elevenlabsVoiceId || "21m00Tcm4TlvDq8ikWAM"
+          apiKeyRecord.elevenlabsVoiceId || "21m00Tcm4TlvDq8ikWAM",
+          apiKeyRecord.enablePauses ?? true
         );
 
         // Uploader l'audio vers S3

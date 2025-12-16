@@ -1,0 +1,1 @@
+ALTER TABLE `apiKeys` ADD `enablePauses` boolean DEFAULT true NOT NULL;

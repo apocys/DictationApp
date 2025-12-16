@@ -41,15 +41,20 @@ export async function getVoices(apiKey: string): Promise<Array<{ id: string; nam
 export async function generateSpeech(
   text: string,
   apiKey: string,
-  voiceId: string = "21m00Tcm4TlvDq8ikWAM"
+  voiceId: string = "21m00Tcm4TlvDq8ikWAM",
+  enablePauses: boolean = true
 ): Promise<Buffer> {
   try {
-    // Ajouter des pauses aux virgules et aux points
-    let textWithPauses = text.replace(/,/g, ',<break time="1s" />');
-    textWithPauses = textWithPauses.replace(/\./g, '.<break time="1.5s" />');
+    // Ajouter des pauses aux virgules et aux points si activé
+    let textWithPauses = text;
+    if (enablePauses) {
+      textWithPauses = text.replace(/,/g, ',<break time="1s" />');
+      textWithPauses = textWithPauses.replace(/\./g, '.<break time="1.5s" />');
+    }
     
     console.log('=== ElevenLabs generateSpeech ===');
     console.log('Voice ID:', voiceId);
+    console.log('Enable pauses:', enablePauses);
     console.log('Original text:', text);
     console.log('Text with pauses:', textWithPauses);
     console.log('Original text length:', text.length);

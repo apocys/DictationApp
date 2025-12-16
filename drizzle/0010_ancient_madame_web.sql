@@ -1,0 +1,9 @@
+CREATE TABLE `globalSettings` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`settingKey` varchar(128) NOT NULL,
+	`settingValue` text NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `globalSettings_id` PRIMARY KEY(`id`),
+	CONSTRAINT `globalSettings_settingKey_unique` UNIQUE(`settingKey`)
+);

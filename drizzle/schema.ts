@@ -79,3 +79,18 @@ export const dictationCorrections = mysqlTable("dictationCorrections", {
 
 export type DictationCorrection = typeof dictationCorrections.$inferSelect;
 export type InsertDictationCorrection = typeof dictationCorrections.$inferInsert;
+
+/**
+ * Table pour stocker les paramètres globaux de l'application (clés API, prompts)
+ * Ces paramètres sont gérés uniquement par les administrateurs
+ */
+export const globalSettings = mysqlTable("globalSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  settingKey: varchar("settingKey", { length: 128 }).notNull().unique(),
+  settingValue: text("settingValue").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GlobalSetting = typeof globalSettings.$inferSelect;
+export type InsertGlobalSetting = typeof globalSettings.$inferInsert;

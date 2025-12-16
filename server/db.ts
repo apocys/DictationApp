@@ -351,3 +351,49 @@ export async function updateDictationSessionAudio(sessionId: number, audioUrl: s
     .set({ audioUrl })
     .where(eq(dictationSessions.id, sessionId));
 }
+
+
+// Global settings management
+export async function getGlobalSetting(key: string): Promise<string | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get global setting: database not available");
+    return null;
+  }
+
+  const { globalSettings } = await import("../drizzle/schema");
+  const result = await db.select().from(globalSettings).where(eq(globalSettings.settingKey, key)).limit(1);
+  return result.length > 0 ? result[0].settingValue : null;
+}
+
+export async function setGlobalSetting(key: string, value: string): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot set global setting: database not available");
+    return;
+  }
+
+  const { globalSettings } = await import("../drizzle/schema");
+  await db.insert(globalSettings).values({
+    settingKey: key,
+    settingValue: value,
+  }).onDuplicateKeyUpdate({
+    set: { settingValue: value, updatedAt: new Date() },
+  });
+}
+
+export async function getAllGlobalSettings(): Promise<Record<string, string>> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get global settings: database not available");
+    return {};
+  }
+
+  const { globalSettings } = await import("../drizzle/schema");
+  const results = await db.select().from(globalSettings);
+  const settings: Record<string, string> = {};
+  for (const row of results) {
+    settings[row.settingKey] = row.settingValue;
+  }
+  return settings;
+}

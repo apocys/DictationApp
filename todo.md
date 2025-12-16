@@ -188,3 +188,13 @@
 - [x] Investiguer si ElevenLabs supporte SSML ou un autre format de pauses (confirmé supporté)
 - [x] Ajouter un bouton pour activer/désactiver les pauses
 - [x] Ajouter un bouton "Régénérer l'audio" quand l'audio existe déjà
+
+## Améliorations demandées
+
+- [x] Récupérer les images depuis l'historique quand on ouvre une dictée
+- [x] Fusionner tous les contrôles vocaux dans une section unique "2. Configurer la lecture"
+- [x] Ajouter la sélection de voix dans la section de configuration de lecture
+- [x] Rendre les paramètres accessibles uniquement aux admins
+- [x] Rendre les paramètres globaux (partagés entre tous les utilisateurs)
+- [x] Permettre l'édition complète des prompts dans les paramètres avancés
+- [ ] Pousser vers GitHub

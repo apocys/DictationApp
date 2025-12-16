@@ -6,9 +6,26 @@ import axios from "axios";
  * @param apiKey Clé API Gemini
  * @returns Liste des mots extraits
  */
+const DEFAULT_EXTRACTION_PROMPT = `Tu es un expert en dictées françaises. Analyse cette image et extrais UNIQUEMENT les mots destinés à être dictés.
+
+RÈGLES D'EXTRACTION :
+1. IGNORE complètement : les titres, en-têtes de colonnes (ex: 'Noms', 'Verbes', 'Adjectifs'), numéros de liste, labels de catégories
+2. GARDE uniquement : les mots et expressions qui seraient prononcés lors d'une dictée
+3. Identifie les mots COMPLETS avec leurs déterminants (ex: 'l'antilope', 'une tapisserie', 'le siècle')
+4. Garde les mots composés ensemble (ex: 'aujourd'hui', 'c'est-à-dire')
+5. Préserve les accents et la ponctuation interne
+
+FORMAT DE SORTIE :
+- Retourne UNIQUEMENT les mots séparés par des virgules
+- Pas de numérotation, pas de catégorisation
+- Un mot par expression (ex: 'une tapisserie' est un mot complet)
+
+Exemple : Si l'image contient un tableau avec 'Noms : une maison, le jardin', tu retournes : une maison, le jardin`;
+
 export async function extractWordsFromImage(
   imageUrl: string,
-  apiKey: string
+  apiKey: string,
+  customPrompt?: string
 ): Promise<string[]> {
   try {
     // Télécharger l'image et la convertir en base64
@@ -18,6 +35,8 @@ export async function extractWordsFromImage(
     const base64Image = Buffer.from(imageResponse.data).toString("base64");
     const mimeType = imageResponse.headers["content-type"] || "image/jpeg";
 
+    const prompt = customPrompt || DEFAULT_EXTRACTION_PROMPT;
+
     // Appeler l'API Gemini
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -26,7 +45,7 @@ export async function extractWordsFromImage(
           {
             parts: [
               {
-                text: "Tu es un expert en dictées françaises. Analyse cette image et extrais UNIQUEMENT les mots destinés à être dictés.\n\nRÈGLES D'EXTRACTION :\n1. IGNORE complètement : les titres, en-têtes de colonnes (ex: 'Noms', 'Verbes', 'Adjectifs'), numéros de liste, labels de catégories\n2. GARDE uniquement : les mots et expressions qui seraient prononcés lors d'une dictée\n3. Identifie les mots COMPLETS avec leurs déterminants (ex: 'l'antilope', 'une tapisserie', 'le siècle')\n4. Garde les mots composés ensemble (ex: 'aujourd'hui', 'c'est-à-dire')\n5. Préserve les accents et la ponctuation interne\n\nFORMAT DE SORTIE :\n- Retourne UNIQUEMENT les mots séparés par des virgules\n- Pas de numérotation, pas de catégorisation\n- Un mot par expression (ex: 'une tapisserie' est un mot complet)\n\nExemple : Si l'image contient un tableau avec 'Noms : une maison, le jardin', tu retournes : une maison, le jardin",
+                text: prompt,
               },
               {
                 inline_data: {
@@ -81,16 +100,26 @@ async function tryGenerateDictation(
   words: string[],
   apiKey: string,
   useSimplePrompt: boolean = false,
-  targetLength?: number
+  targetLength?: number,
+  customPrompt?: string
 ): Promise<string> {
   const wordList = words.join(", ");
   const length = targetLength || 120;
   const minLength = Math.max(50, length - 30);
   const maxLength = Math.min(300, length + 30);
   
-  const prompt = useSimplePrompt
-    ? `Écris un court texte en français simple (environ ${length} mots) adapté à un enfant de 10 ans qui utilise ces mots : ${wordList}. Utilise un vocabulaire simple et des phrases courtes. Réponds uniquement avec le texte, sans titre ni formatage.`
-    : `Écris une dictée en français d'environ ${minLength}-${maxLength} mots adaptée à un enfant de 10 ans (niveau CM2) qui utilise TOUS les mots suivants : ${wordList}.
+  // Utiliser le prompt personnalisé si fourni et pas en mode simple
+  let prompt: string;
+  if (customPrompt && !useSimplePrompt) {
+    // Remplacer les variables dans le prompt personnalisé
+    prompt = customPrompt
+      .replace('[liste des mots]', wordList)
+      .replace('[longueur]', String(length))
+      .replace('[nombre]', String(words.length));
+  } else if (useSimplePrompt) {
+    prompt = `Écris un court texte en français simple (environ ${length} mots) adapté à un enfant de 10 ans qui utilise ces mots : ${wordList}. Utilise un vocabulaire simple et des phrases courtes. Réponds uniquement avec le texte, sans titre ni formatage.`;
+  } else {
+    prompt = `Écris une dictée en français d'environ ${minLength}-${maxLength} mots adaptée à un enfant de 10 ans (niveau CM2) qui utilise TOUS les mots suivants : ${wordList}.
 
 CONSIGNES PÉDAGOGIQUES :
 - Utilise un vocabulaire simple et adapté à l'âge (10 ans)
@@ -101,6 +130,7 @@ CONSIGNES PÉDAGOGIQUES :
 - Assure-toi que tous les mots de la liste sont utilisés au moins une fois
 
 IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'autre. Pas de titre, pas d'introduction, pas de commentaire, pas de formatage markdown (pas d'astérisques **), pas d'explication. Juste le texte brut de la dictée qui commence directement par la première phrase.`;
+  }
   
   const response = await axios.post(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -151,11 +181,12 @@ IMPORTANT : Ta réponse doit contenir UNIQUEMENT le texte de la dictée, rien d'
 export async function generateDictation(
   words: string[],
   apiKey: string,
-  targetLength?: number
+  targetLength?: number,
+  customPrompt?: string
 ): Promise<string> {
   try {
     // Première tentative avec le prompt complet
-    let text = await tryGenerateDictation(words, apiKey, false, targetLength);
+    let text = await tryGenerateDictation(words, apiKey, false, targetLength, customPrompt);
     
     // Si le texte est vide, essayer avec un prompt plus simple
     if (!text || text.trim().length === 0) {
@@ -186,38 +217,13 @@ export async function generateDictation(
  * @param apiKey Clé API Gemini
  * @returns Analyse détaillée des erreurs
  */
-export async function analyzeDictationErrors(
-  originalText: string,
-  userText: string,
-  apiKey: string
-): Promise<{
-  errors: Array<{
-    type: string;
-    original: string;
-    user: string;
-    explanation: string;
-    position: number;
-  }>;
-  score: number;
-  totalWords: number;
-  correctWords: number;
-  feedback: string;
-}> {
-  try {
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: `Tu es un correcteur de dictée expert. Compare le texte original avec le texte écrit par l'utilisateur et identifie TOUTES les erreurs.
+const DEFAULT_ANALYSIS_PROMPT = `Tu es un correcteur de dictée expert. Compare le texte original avec le texte écrit par l'utilisateur et identifie TOUTES les erreurs.
 
 TEXTE ORIGINAL:
-${originalText}
+{{originalText}}
 
 TEXTE DE L'UTILISATEUR:
-${userText}
+{{userText}}
 
 Analyse les erreurs et retourne un JSON avec cette structure exacte:
 {
@@ -235,7 +241,47 @@ Analyse les erreurs et retourne un JSON avec cette structure exacte:
   "feedback": "commentaire général encourageant et constructif sur la performance"
 }
 
-Sois précis et pédagogique dans tes explications. Retourne UNIQUEMENT le JSON, sans texte avant ou après.`,
+Sois précis et pédagogique dans tes explications. Retourne UNIQUEMENT le JSON, sans texte avant ou après.`;
+
+export async function analyzeDictationErrors(
+  originalText: string,
+  userText: string,
+  apiKey: string,
+  customPrompt?: string
+): Promise<{
+  errors: Array<{
+    type: string;
+    original: string;
+    user: string;
+    explanation: string;
+    position: number;
+  }>;
+  score: number;
+  totalWords: number;
+  correctWords: number;
+  feedback: string;
+}> {
+  try {
+    // Utiliser le prompt personnalisé ou le prompt par défaut
+    let prompt: string;
+    if (customPrompt) {
+      prompt = customPrompt
+        .replace('{{originalText}}', originalText)
+        .replace('{{userText}}', userText);
+    } else {
+      prompt = DEFAULT_ANALYSIS_PROMPT
+        .replace('{{originalText}}', originalText)
+        .replace('{{userText}}', userText);
+    }
+
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
               },
             ],
           },

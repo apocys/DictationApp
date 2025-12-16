@@ -45,9 +45,21 @@ export default function Dictation() {
     enabled: !!user,
   });
 
+  // Charger les voix ElevenLabs
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
+  const { data: voicesData } = trpc.apiKeys.getElevenlabsVoices.useQuery(
+    undefined,
+    {
+      enabled: !!user && !!apiKeyData?.elevenlabsApiKey,
+    }
+  );
+
   useEffect(() => {
     if (apiKeyData?.wordInterval) {
       setIntervalSeconds(apiKeyData.wordInterval);
+    }
+    if (apiKeyData?.elevenlabsVoiceId) {
+      setSelectedVoiceId(apiKeyData.elevenlabsVoiceId);
     }
   }, [apiKeyData]);
 
@@ -92,6 +104,9 @@ export default function Dictation() {
         }
         if (session.audioUrl) {
           setAudioUrl(session.audioUrl);
+        }
+        if (session.imageUrl) {
+          setImagePreview(session.imageUrl);
         }
       }
     }
@@ -546,30 +561,120 @@ export default function Dictation() {
                     Ajustez l'intervalle entre chaque mot
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Intervalle: {intervalSeconds} secondes</Label>
-                    <Slider
-                      value={[intervalSeconds]}
-                      onValueChange={(value) => setIntervalSeconds(value[0] || 5)}
-                      min={1}
-                      max={15}
-                      step={1}
-                      className="w-full"
-                    />
+                <CardContent className="space-y-6">
+                  {/* Lecture mot par mot */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Lecture mot par mot</h4>
+                    <div className="space-y-2">
+                      <Label>Intervalle: {intervalSeconds} secondes</Label>
+                      <Slider
+                        value={[intervalSeconds]}
+                        onValueChange={(value) => setIntervalSeconds(value[0] || 5)}
+                        min={1}
+                        max={15}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      {!isPlaying ? (
+                        <Button onClick={startReading} className="flex-1">
+                          <Play className="mr-2 h-4 w-4" />
+                          Lire les mots
+                        </Button>
+                      ) : (
+                        <Button onClick={pauseReading} variant="secondary" className="flex-1">
+                          <Pause className="mr-2 h-4 w-4" />
+                          Pause
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    {!isPlaying ? (
-                      <Button onClick={startReading} className="flex-1">
-                        <Play className="mr-2 h-4 w-4" />
-                        Lire
-                      </Button>
-                    ) : (
-                      <Button onClick={pauseReading} variant="secondary" className="flex-1">
-                        <Pause className="mr-2 h-4 w-4" />
-                        Pause
-                      </Button>
+
+                  {/* Contrôles vocaux unifiés */}
+                  <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-sm">Paramètres de la voix</h4>
+                    
+                    {/* Sélection de la voix ElevenLabs */}
+                    {apiKeyData?.elevenlabsApiKey && voicesData?.voices && voicesData.voices.length > 0 && (
+                      <div>
+                        <label className="text-xs text-gray-600 block mb-1">
+                          Voix ElevenLabs
+                        </label>
+                        <select
+                          value={selectedVoiceId}
+                          onChange={(e) => setSelectedVoiceId(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          {voicesData.voices.map((voice: { id: string; name: string; labels: Record<string, string> }) => (
+                            <option key={voice.id} value={voice.id}>
+                              {voice.name} {voice.labels.accent ? `(${voice.labels.accent})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     )}
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs text-gray-600 block mb-1">
+                          Vitesse synthèse: {speechRate.toFixed(1)}x
+                        </label>
+                        <input
+                          type="range"
+                          min="0.5"
+                          max="2"
+                          step="0.1"
+                          value={speechRate}
+                          onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-600 block mb-1">
+                          Volume: {Math.round(speechVolume * 100)}%
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={speechVolume}
+                          onChange={(e) => setSpeechVolume(parseFloat(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs text-gray-600 block mb-1">
+                          Vitesse lecture audio: {audioPlaybackRate}x
+                        </label>
+                        <input
+                          type="range"
+                          min="0.5"
+                          max="2"
+                          step="0.1"
+                          value={audioPlaybackRate}
+                          onChange={(e) => changePlaybackRate(Number(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-600 block mb-1">
+                          Répétitions: {repeatCount}x
+                        </label>
+                        <input
+                          type="range"
+                          min="1"
+                          max="10"
+                          step="1"
+                          value={repeatCount}
+                          onChange={(e) => setRepeatCount(Number(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -681,41 +786,7 @@ export default function Dictation() {
                         </div>
                       </div>
                       
-                      <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-medium text-sm">Contrôles vocaux</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-xs text-gray-600 block mb-1">
-                              Vitesse: {speechRate.toFixed(1)}x
-                            </label>
-                            <input
-                              type="range"
-                              min="0.5"
-                              max="2"
-                              step="0.1"
-                              value={speechRate}
-                              onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
-                              className="w-full"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-600 block mb-1">
-                              Volume: {Math.round(speechVolume * 100)}%
-                            </label>
-                            <input
-                              type="range"
-                              min="0"
-                              max="1"
-                              step="0.1"
-                              value={speechVolume}
-                              onChange={(e) => setSpeechVolume(parseFloat(e.target.value))}
-                              className="w-full"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                       {/* Barre de progression audio */}
+                      {/* Barre de progression audio */}
                       {audioUrl && audioDuration > 0 && (
                         <div className="space-y-1 mb-3">
                           <input
@@ -735,36 +806,11 @@ export default function Dictation() {
                           </div>
                         </div>
                       )}
-
-                      {/* Contrôles de vitesse et répétition */}
-                      {audioUrl && (
-                        <div className="flex gap-4 mb-3 text-sm">
-                          <div className="flex items-center gap-2 flex-1">
-                            <Label className="text-xs whitespace-nowrap">Vitesse: {audioPlaybackRate}x</Label>
-                            <input
-                              type="range"
-                              min="0.5"
-                              max="2"
-                              step="0.1"
-                              value={audioPlaybackRate}
-                              onChange={(e) => changePlaybackRate(Number(e.target.value))}
-                              className="flex-1 h-1"
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs whitespace-nowrap">Répéter:</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              max="10"
-                              value={repeatCount}
-                              onChange={(e) => setRepeatCount(Number(e.target.value))}
-                              className="w-16 h-8 text-xs"
-                            />
-                            {currentRepeat > 0 && (
-                              <span className="text-xs text-gray-500">({currentRepeat + 1}/{repeatCount})</span>
-                            )}
-                          </div>
+                      
+                      {/* Indicateur de répétition */}
+                      {currentRepeat > 0 && (
+                        <div className="text-xs text-gray-500 text-center mb-2">
+                          Répétition {currentRepeat + 1}/{repeatCount}
                         </div>
                       )}
 
@@ -778,7 +824,8 @@ export default function Dictation() {
                               }
                               generateAudioMutation.mutate({ 
                                 text: generatedDictation,
-                                sessionId: currentSessionId 
+                                sessionId: currentSessionId,
+                                voiceId: selectedVoiceId || undefined
                               });
                             }}
                             disabled={generateAudioMutation.isPending}
@@ -829,7 +876,8 @@ export default function Dictation() {
                                 setAudioUrl("");
                                 generateAudioMutation.mutate({ 
                                   text: generatedDictation, 
-                                  sessionId: currentSessionId 
+                                  sessionId: currentSessionId,
+                                  voiceId: selectedVoiceId || undefined
                                 });
                               }}
                               variant="outline"

@@ -70,21 +70,25 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const { getApiKeyByUserId, createDictationSession } = await import("./db");
+        const { getGlobalSetting, createDictationSession } = await import("./db");
         const { extractWordsFromImage } = await import("./gemini");
 
-        // Récupérer la clé API de l'utilisateur
-        const apiKeyRecord = await getApiKeyByUserId(ctx.user.id);
-        if (!apiKeyRecord) {
+        // Récupérer la clé API globale
+        const geminiApiKey = await getGlobalSetting('geminiApiKey');
+        if (!geminiApiKey) {
           throw new Error(
-            "Aucune clé API Gemini configurée. Veuillez configurer votre clé API dans les paramètres."
+            "Aucune clé API Gemini configurée. Contactez l'administrateur."
           );
         }
+
+        // Récupérer le prompt personnalisé si disponible
+        const customPrompt = await getGlobalSetting('promptExtraction');
 
         // Extraire les mots de l'image
         const words = await extractWordsFromImage(
           input.imageUrl,
-          apiKeyRecord.geminiApiKey
+          geminiApiKey,
+          customPrompt || undefined
         );
 
         // Sauvegarder la session et récupérer l'ID
@@ -106,22 +110,26 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const { getApiKeyByUserId, updateDictationSessionText } = await import("./db");
+        const { getGlobalSetting, updateDictationSessionText } = await import("./db");
         const { generateDictation } = await import("./gemini");
 
-        // Récupérer la clé API de l'utilisateur
-        const apiKeyRecord = await getApiKeyByUserId(ctx.user.id);
-        if (!apiKeyRecord) {
+        // Récupérer la clé API globale
+        const geminiApiKey = await getGlobalSetting('geminiApiKey');
+        if (!geminiApiKey) {
           throw new Error(
-            "Aucune clé API Gemini configurée. Veuillez configurer votre clé API dans les paramètres."
+            "Aucune clé API Gemini configurée. Contactez l'administrateur."
           );
         }
+
+        // Récupérer le prompt personnalisé si disponible
+        const customPrompt = await getGlobalSetting('promptDictation');
 
         // Générer la dictée
         const dictationText = await generateDictation(
           input.words,
-          apiKeyRecord.geminiApiKey,
-          input.targetLength
+          geminiApiKey,
+          input.targetLength,
+          customPrompt || undefined
         );
 
         // Sauvegarder la dictée générée dans la session si sessionId est fourni
@@ -148,27 +156,36 @@ export const appRouter = router({
         z.object({
           text: z.string().min(1, "Texte requis"),
           sessionId: z.number().optional(),
+          voiceId: z.string().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const { getApiKeyByUserId, updateDictationSessionAudio } = await import("./db");
+        const { getGlobalSetting, updateDictationSessionAudio } = await import("./db");
         const { generateSpeech } = await import("./elevenlabs");
         const { storagePut } = await import("./storage");
 
-        // Récupérer les clés API de l'utilisateur
-        const apiKeyRecord = await getApiKeyByUserId(ctx.user.id);
+        // Récupérer les clés API globales
+        const elevenlabsApiKey = await getGlobalSetting('elevenlabsApiKey');
         
         // Si pas de clé ElevenLabs, retourner null (utiliser la synthèse du navigateur)
-        if (!apiKeyRecord?.elevenlabsApiKey) {
+        if (!elevenlabsApiKey) {
           return { audioUrl: null };
         }
+
+        // Récupérer les autres paramètres globaux
+        const defaultVoiceId = await getGlobalSetting('elevenlabsVoiceId');
+        const enablePausesStr = await getGlobalSetting('enablePauses');
+        const enablePauses = enablePausesStr !== 'false';
+
+        // Utiliser la voix sélectionnée ou celle par défaut
+        const voiceId = input.voiceId || defaultVoiceId || "21m00Tcm4TlvDq8ikWAM";
 
         // Générer l'audio avec ElevenLabs
         const audioBuffer = await generateSpeech(
           input.text,
-          apiKeyRecord.elevenlabsApiKey,
-          apiKeyRecord.elevenlabsVoiceId || "21m00Tcm4TlvDq8ikWAM",
-          apiKeyRecord.enablePauses ?? true
+          elevenlabsApiKey,
+          voiceId,
+          enablePauses
         );
 
         // Uploader l'audio vers S3
@@ -220,21 +237,24 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const { getApiKeyByUserId, createDictationCorrection } = await import("./db");
+        const { getGlobalSetting, createDictationCorrection } = await import("./db");
         const { extractWordsFromImage, analyzeDictationErrors } = await import("./gemini");
 
-        // Récupérer la clé API de l'utilisateur
-        const apiKeyRecord = await getApiKeyByUserId(ctx.user.id);
-        if (!apiKeyRecord) {
+        // Récupérer la clé API globale
+        const geminiApiKey = await getGlobalSetting('geminiApiKey');
+        if (!geminiApiKey) {
           throw new Error(
-            "Aucune clé API Gemini configurée. Veuillez configurer votre clé API dans les paramètres."
+            "Aucune clé API Gemini configurée. Contactez l'administrateur."
           );
         }
+
+        // Récupérer le prompt d'analyse personnalisé
+        const customPrompt = await getGlobalSetting('promptAnalysis');
 
         // Extraire le texte de l'image de l'utilisateur
         const extractedWords = await extractWordsFromImage(
           input.userImageUrl,
-          apiKeyRecord.geminiApiKey
+          geminiApiKey
         );
         const extractedUserText = extractedWords.join(" ");
 
@@ -242,7 +262,8 @@ export const appRouter = router({
         const analysis = await analyzeDictationErrors(
           input.originalText,
           extractedUserText,
-          apiKeyRecord.geminiApiKey
+          geminiApiKey,
+          customPrompt || undefined
         );
 
         // Sauvegarder la correction
@@ -273,6 +294,106 @@ export const appRouter = router({
         const { getDictationCorrectionById } = await import("./db");
         return getDictationCorrectionById(input.id, ctx.user.id);
       }),
+  }),
+
+  // Admin management - Global settings
+  admin: router({
+    // Vérifier si l'utilisateur est admin
+    isAdmin: protectedProcedure.query(async ({ ctx }) => {
+      return { isAdmin: ctx.user.role === 'admin' };
+    }),
+    
+    // Récupérer tous les paramètres globaux (admin only)
+    getGlobalSettings: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') {
+        throw new Error("Accès refusé. Vous devez être administrateur.");
+      }
+      const { getAllGlobalSettings } = await import("./db");
+      return getAllGlobalSettings();
+    }),
+    
+    // Sauvegarder un paramètre global (admin only)
+    setGlobalSetting: protectedProcedure
+      .input(
+        z.object({
+          key: z.string().min(1),
+          value: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new Error("Accès refusé. Vous devez être administrateur.");
+        }
+        const { setGlobalSetting } = await import("./db");
+        await setGlobalSetting(input.key, input.value);
+        return { success: true };
+      }),
+      
+    // Sauvegarder plusieurs paramètres globaux (admin only)
+    saveGlobalSettings: protectedProcedure
+      .input(
+        z.object({
+          geminiApiKey: z.string().optional(),
+          elevenlabsApiKey: z.string().optional(),
+          elevenlabsVoiceId: z.string().optional(),
+          enablePauses: z.boolean().optional(),
+          wordInterval: z.number().optional(),
+          promptExtraction: z.string().optional(),
+          promptDictation: z.string().optional(),
+          promptAnalysis: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new Error("Accès refusé. Vous devez être administrateur.");
+        }
+        const { setGlobalSetting } = await import("./db");
+        
+        if (input.geminiApiKey !== undefined) {
+          await setGlobalSetting('geminiApiKey', input.geminiApiKey);
+        }
+        if (input.elevenlabsApiKey !== undefined) {
+          await setGlobalSetting('elevenlabsApiKey', input.elevenlabsApiKey);
+        }
+        if (input.elevenlabsVoiceId !== undefined) {
+          await setGlobalSetting('elevenlabsVoiceId', input.elevenlabsVoiceId);
+        }
+        if (input.enablePauses !== undefined) {
+          await setGlobalSetting('enablePauses', String(input.enablePauses));
+        }
+        if (input.wordInterval !== undefined) {
+          await setGlobalSetting('wordInterval', String(input.wordInterval));
+        }
+        if (input.promptExtraction !== undefined) {
+          await setGlobalSetting('promptExtraction', input.promptExtraction);
+        }
+        if (input.promptDictation !== undefined) {
+          await setGlobalSetting('promptDictation', input.promptDictation);
+        }
+        if (input.promptAnalysis !== undefined) {
+          await setGlobalSetting('promptAnalysis', input.promptAnalysis);
+        }
+        
+        return { success: true };
+      }),
+      
+    // Récupérer les voix ElevenLabs avec la clé globale (admin only)
+    getElevenlabsVoices: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') {
+        throw new Error("Accès refusé. Vous devez être administrateur.");
+      }
+      const { getGlobalSetting } = await import("./db");
+      const { getVoices } = await import("./elevenlabs");
+      
+      const apiKey = await getGlobalSetting('elevenlabsApiKey');
+      
+      if (!apiKey) {
+        return { voices: [] };
+      }
+      
+      const voices = await getVoices(apiKey);
+      return { voices };
+    }),
   }),
 });
 
